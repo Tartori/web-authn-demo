@@ -35,29 +35,17 @@ public class UserRepository {
     }
 
     public User updateUser(SensitiveUser user){
-        final SensitiveUser adjusted = new SensitiveUser();
-        getUserByUsername(user.getUsername()).ifPresent(
-                oldUser->{
-                    adjusted.setName(oldUser.getName());
-                    adjusted.setUsername(oldUser.getUsername());
-                    adjusted.setRegistered(oldUser.isRegistered());
-                }
-        );
-        users.remove(adjusted);
-        adjusted.setRegistered(user.isRegistered());
-        adjusted.setName(user.getName());
-        users.add(adjusted);
-        return adjusted;
+        if(getUserByUsername(user.getUsername()).isPresent())
+            users.remove(user);
+        users.add(user);
+        return user;
     }
 
     public SensitiveUser sensitiveUserFromUser(User user){
         if(user instanceof SensitiveUser)
             return (SensitiveUser) user;
         Optional<SensitiveUser> inRepo=getUserByUsername(user.getUsername());
-        if(inRepo.isPresent()){
-            return inRepo.get();
-        }
-        return new SensitiveUser(user);
+        return inRepo.orElseGet(() -> new SensitiveUser(user));
     }
 
     private void addTestData(){

@@ -3,7 +3,7 @@ package ch.bfh.ti.service.register;
 import ch.bfh.ti.repository.user.SensitiveUser;
 import ch.bfh.ti.repository.user.User;
 import ch.bfh.ti.repository.user.UserRepository;
-import ch.bfh.ti.utils.ChallangeGenerator;
+import ch.bfh.ti.utils.Base64StringGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.security.SecureRandom;
 
 @RestController
 @RequestMapping(RegistrationController.RESOURCE)
@@ -25,7 +23,7 @@ public class RegistrationController {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ChallangeGenerator challangeGenerator;
+    private Base64StringGenerator base64StringGenerator;
     @Value("${fido.domain}")
     private String domain;
     @PostMapping
@@ -35,19 +33,33 @@ public class RegistrationController {
             return badRequestResponse();
         }
 
-        if (userRepository.getUserByUsername(user.getUsername()).isPresent()) {
-          return badRequestResponse();
-        }
+//        if (userRepository.getUserByUsername(user.getUsername()).isPresent()) {
+//          return badRequestResponse();
+//        }
 
         SensitiveUser sensitiveUser = userRepository.sensitiveUserFromUser(user);
         sensitiveUser.setRegistered(false);
-        sensitiveUser.setId(new SecureRandom().nextInt()&Integer.MAX_VALUE);
-        sensitiveUser.setChallenge(challangeGenerator.generateNewChallange());
-        ObjectNode node = objectMapper.createObjectNode();
+        sensitiveUser.setId(base64StringGenerator.generateNewString());
+        sensitiveUser.setChallenge(base64StringGenerator.generateNewString());
+        ObjectNode node = objectMapper
+                .createObjectNode()
+                .putObject("publicKey");
         node.put("challenge", sensitiveUser.getChallenge());
-        node.put("user.id", sensitiveUser.getId());
-        node.put("domain", domain);
-        userRepository.addUser(sensitiveUser);
+        node.put("fidoResponse", "direct");
+        node.putObject("rp")
+                .put("name", "BFH") ;
+        node.putObject("user")
+                .put("id", sensitiveUser.getId())
+                .put("name", sensitiveUser.getUsername())
+                .put("displayName", sensitiveUser.getName());
+        node.putArray("pubKeyCredParams")
+                .addObject()
+                .put("type","public-key")
+                .put("alg", -7);
+        node.put("timeout", 60*1000);
+        node.put("errorMessage", "");
+        node.put("status", "ok");
+        userRepository.updateUser(sensitiveUser);
         return node;
     }
 

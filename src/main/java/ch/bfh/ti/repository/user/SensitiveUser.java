@@ -2,7 +2,7 @@ package ch.bfh.ti.repository.user;
 
 public class SensitiveUser extends User {
     private boolean registered=false;
-    private int id=0;
+    private String id="";
     private String challenge ="";
 
 
@@ -31,11 +31,11 @@ public class SensitiveUser extends User {
                 '}';
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

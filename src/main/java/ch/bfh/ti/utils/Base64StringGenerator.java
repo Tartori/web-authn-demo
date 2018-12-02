@@ -7,11 +7,11 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 @Service
-public class ChallangeGenerator {
+public class Base64StringGenerator {
     @Autowired
     Base64.Encoder base64UrlEncoder;
 
-    public String generateNewChallange(){
+    public String generateNewString(){
         byte[] buf= new byte[32];
         new SecureRandom().nextBytes(buf);
         return base64UrlEncoder.encodeToString(buf);
