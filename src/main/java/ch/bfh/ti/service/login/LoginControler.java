@@ -19,7 +19,7 @@ public class LoginControler {
 
 
     @PostMapping
-    public ResponseEntity<User> create(@RequestBody final User dataOffer) {
-        return new ResponseEntity<>(userRepository.addUser(dataOffer), HttpStatus.CREATED);
+    public ResponseEntity<User> create(@RequestBody final User user) {
+        return new ResponseEntity<>(userRepository.addUser(userRepository.sensitiveUserFromUser(user)), HttpStatus.CREATED);
     }
 }

@@ -23,14 +23,15 @@ public class UsersController {
 
     @GetMapping
     public ResponseEntity<Set<User>> read() {
-        return new ResponseEntity<>(userRepository.getUsers(), HttpStatus.OK);
+        return new ResponseEntity<>(userRepository.getSafeUsers(), HttpStatus.OK);
     }
 
     @GetMapping(UserName)
     public ResponseEntity<User> read(@PathVariable final String username) {
         return userRepository
                 .getUserByUsername(username)
-                .map(dataOffer -> new ResponseEntity<>(dataOffer, HttpStatus.OK))
+                .map(User::getStrippedUser)
+                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
                 .orElse(notFoundResponse());
     }
 
