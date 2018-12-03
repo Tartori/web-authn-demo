@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -134,13 +135,13 @@ public class RegistrationController {
 
         byte[] clientHash=DigestUtils.sha256(response.get("clientDataJSON").asText());
 
-
         sensitiveUser.setCredentialId(base64UrlEncoder.encodeToString(authData.getCredId()));
         sensitiveUser.setRegistered(true);
 
 
         ObjectNode node = objectMapper
                 .createObjectNode();
+        node.put("username",sensitiveUser.getUsername());
         node.put("errorMessage", "");
         node.put("status", "ok");
         userRepository.updateUser(sensitiveUser);

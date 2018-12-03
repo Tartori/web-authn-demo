@@ -117,6 +117,10 @@ public class AuthData {
         return (flagsBuf[0]&ED_FLAG)==ED_FLAG;
     }
 
+    public PubKey getPubKey(){
+        return new PubKey(getCOSEPublicKey());
+    }
+
     public byte getFlags() {
         return flagsBuf[0];
     }

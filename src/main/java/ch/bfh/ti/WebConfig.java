@@ -3,13 +3,26 @@ package ch.bfh.ti;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.*;
 
 import java.util.Base64;
 
+@EnableWebMvc
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/").setViewName("index");
+        registry.addViewController("/index").setViewName("index");
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry
+                .addResourceHandler("/web/static/**")
+                .addResourceLocations("/web/static/");
+    }
 
     @Override
     public void addCorsMappings(final CorsRegistry registry) {
