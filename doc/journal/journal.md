@@ -8,6 +8,12 @@ Created first draft of register. Client side heavily leaned on webauthn-demo fro
 
 Browser compatibility not yet tested...
 
+### Issues
+
+* No easy to use libraries
+* Documentation not easy to follow
+* HTTPS required for certain things
+
 ## 2018.11.24
 
 Completed demo from Fido-Alliance at <https://github.com/fido-alliance/webauthn-demo>
