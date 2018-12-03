@@ -21,6 +21,14 @@ public class UserRepository {
         return Collections.unmodifiableSet(users.stream().map(User::getStrippedUser).collect(Collectors.toSet()));
     }
 
+    public Optional<SensitiveUser> getUserByChallengeAndRegistered(final String challenge, final boolean isRegistered){
+        return users.stream().filter(user -> user.isRegistered()==isRegistered && user.getChallenge().equals(challenge)).findFirst();
+    }
+
+    public Optional<SensitiveUser> getUserByCredential(final String credential){
+        return users.stream().filter(user -> user.getCredentialId().equals(credential)).findFirst();
+    }
+
     public Set<SensitiveUser> getSensitiveUsers(){
         return Collections.unmodifiableSet(users);
     }

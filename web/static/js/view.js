@@ -1,7 +1,7 @@
 /**
  * Switch to login page
  */
-$('#toLogin').click(function(e) {
+$('#toLogin').click(function (e) {
     e.preventDefault();
     $('#registerContainer').hide();
     $('#loginContainer').show();
@@ -10,17 +10,17 @@ $('#toLogin').click(function(e) {
 /**
  * Switch to registration page
  */
-$('#toRegistration').click(function(e) {
+$('#toRegistration').click(function (e) {
     e.preventDefault();
     $('#loginContainer').hide();
     $('#registerContainer').show();
 })
 
 let loadMainContainer = () => {
-    return fetch('/personalInfo', {credentials: 'include'})
+    return fetch('http://localhost:8080/users/rest')
         .then((response) => response.json())
         .then((response) => {
-            if(response.status === 'ok') {
+            if (response.status === 'ok') {
                 $('#theSecret').html(response.theSecret)
                 $('#name').html(response.name)
                 $('#registerContainer').hide();
@@ -33,10 +33,10 @@ let loadMainContainer = () => {
 }
 
 let checkIfLoggedIn = () => {
-    return fetch('/isLoggedIn', {credentials: 'include'})
+    return fetch('/isLoggedIn', { credentials: 'include' })
         .then((response) => response.json())
         .then((response) => {
-            if(response.status === 'ok') {
+            if (response.status === 'ok') {
                 return true
             } else {
                 return false
@@ -45,7 +45,7 @@ let checkIfLoggedIn = () => {
 }
 
 $('#logoutButton').click(() => {
-    fetch('/logout', {credentials: 'include'});
+    fetch('/logout', { credentials: 'include' });
 
     $('#registerContainer').hide();
     $('#mainContainer').hide();

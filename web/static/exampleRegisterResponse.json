@@ -1,0 +1,10 @@
+{
+  "rawId": "fPvu4O6NZA5vzJgwfkGAoXYF6-vfsm4xZS73jz3zGOjNONt8i21UP11IaRNNLHS9-SPg1qKEWlSPCywmCNR1ug",
+  "response": {
+    "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVjESZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NBAAAAIAAAAAAAAAAAAAAAAAAAAAAAQHz77uDujWQOb8yYMH5BgKF2Bevr37JuMWUu94898xjozTjbfIttVD9dSGkTTSx0vfkj4NaihFpUjwssJgjUdbqlAQIDJiABIVggLdudL6Hobp6Jb0ZQyjq18mmU3AX8C6eySs4qhE_r9Q0iWCD7AacYwIw-_SlynmQtYWahgHUSZeFAa9kn2wctAwixMw",
+    "clientDataJSON": "eyJjaGFsbGVuZ2UiOiIzNWxuekdjYVRGcmJTek5rUFdhZ2RTbFc1QWZjbHc5ZFJtRVNsZ3djYjJVIiwibmV3X2tleXNfbWF5X2JlX2FkZGVkX2hlcmUiOiJkbyBub3QgY29tcGFyZSBjbGllbnREYXRhSlNPTiBhZ2FpbnN0IGEgdGVtcGxhdGUuIFNlZSBodHRwczovL2dvby5nbC95YWJQZXgiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjgwMDAiLCJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIn0"
+  },
+  "getClientExtensionResults": {},
+  "id": "fPvu4O6NZA5vzJgwfkGAoXYF6-vfsm4xZS73jz3zGOjNONt8i21UP11IaRNNLHS9-SPg1qKEWlSPCywmCNR1ug",
+  "type": "public-key"
+}

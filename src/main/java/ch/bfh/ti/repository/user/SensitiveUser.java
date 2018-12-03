@@ -4,7 +4,8 @@ public class SensitiveUser extends User {
     private boolean registered=false;
     private String id="";
     private String challenge ="";
-
+    private String domain="";
+    private String credentialId="";
 
     public SensitiveUser(){}
 
@@ -45,5 +46,21 @@ public class SensitiveUser extends User {
 
     public void setChallenge(String challenge) {
         this.challenge = challenge;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
     }
 }

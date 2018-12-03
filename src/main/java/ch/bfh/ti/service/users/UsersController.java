@@ -2,6 +2,8 @@ package ch.bfh.ti.service.users;
 
 import ch.bfh.ti.repository.user.User;
 import ch.bfh.ti.repository.user.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ public class UsersController {
     private static final String UserName = "/{username}";
 
     @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
     private UserRepository userRepository;
 
     @GetMapping
@@ -27,17 +31,24 @@ public class UsersController {
     }
 
     @GetMapping(UserName)
-    public ResponseEntity<User> read(@PathVariable final String username) {
-        return userRepository
-                .getUserByUsername(username)
-                .map(User::getStrippedUser)
-                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
-                .orElse(notFoundResponse());
+    public ObjectNode read(@PathVariable final String username) {
+    return userRepository
+        .getUserByUsername(username)
+        .map(User::getStrippedUser)
+        .map(
+            user ->
+                objectMapper
+                    .createObjectNode()
+                    .put("name", user.getName())
+                    .put(
+                        "theSecret", "'<img width=\"250px\" src=\"img/theworstofthesecrets.jpg\">'")
+                    .put("status", "ok"))
+        .orElse(notFoundResponse());
     }
 
 
 
-    private ResponseEntity<User> notFoundResponse() {
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    private ObjectNode notFoundResponse() {
+        return objectMapper.createObjectNode().put("error", "Bad Request");
     }
 }

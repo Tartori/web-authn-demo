@@ -1,5 +1,7 @@
 package ch.bfh.ti.repository.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Objects;
 
 public class User{
@@ -40,6 +42,7 @@ public class User{
         }
     }
 
+    @JsonIgnore
     public User getStrippedUser(){
         User user = new User();
         user.setUsername(this.getUsername());

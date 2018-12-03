@@ -16,7 +16,7 @@ $('#register').submit(function (event) {
     .then((response) => {
       console.log(response);
       let publicKey = preformatMakeCredReq(response);
-      return navigator.credentials.create({publicKey})
+      return navigator.credentials.create({ publicKey })
     })
     .then((response) => {
       let makeCredResponse = publicKeyCredentialToJSON(response);
@@ -63,19 +63,15 @@ $('#login').submit(function (event) {
 
 
 let sendWebAuthnResponse = (body) => {
-  return fetch('http://localhost:8080/response', {
+  return fetch('http://localhost:8080/register/response', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)
   })
+    .then((response) => response.json())
     .then((response) => {
-      console.log(response.json())
-      return response.json()
-    })
-    .then((response) => {
-      console.log(response)
       if (response.status !== 'ok')
         throw new Error(`Server responed with error. The message is: ${response.message}`);
 
