@@ -2,6 +2,11 @@
 
 ## 2018.12.03 Project Meeting
 
+### 2. Tasks
+
+* check NFC on android --> make it work
+* Login
+
 ## 2018.12.01 - 2018.12.03
 
 Created first draft of register. Client side heavily leaned on webauthn-demo from Fido-Alliance. Currently parsing of answer is done manually. Should aim for some kind of Library. So far none really jumps out. Maybe Yubico Library.
@@ -25,7 +30,7 @@ asd
 
 ## 2018.11.12 Project Meeting
 
-Project Meeting Tasks:
+### 1. Tasks
 
 * Setting up Webclient with FIDO2 Auth
 * checking browser compatibility
