@@ -46,6 +46,8 @@ public class RegistrationController {
     Base64.Encoder base64UrlEncoder;
     @Autowired
     CBORFactory cborFactory;
+    @Autowired
+    ObjectMapper cborMapper;
 
     @PostMapping
     public ObjectNode create(@RequestBody final User user) {
@@ -116,12 +118,13 @@ public class RegistrationController {
         step5(decodedClientData, sensitiveUser);//check origin
         step6(decodedClientData);//check token binding
         byte[] clientHash=step7(response); //calculate client hash because why not?
-        AuthData authData = step8(response); //perform CBOR decoding
+        JsonNode attestationData = step7to8(response);
+        AuthData authData = step8(attestationData); //perform CBOR decoding
         step9(authData); //check rpid hash to origin - hashed
         step10(authData); //check for userPresent flag
         step11(authData); //check for userVerified flag
-        step12(); //various checks on extensions in authData
-        step13(); //check check fmt format
+        step12(authData); //various checks on extensions in authData
+        step13(attestationData); //check check fmt format
         step14(); // check attStmt signature
         step15(); //obtain trust anchors
         step16(); // assess the trustworthiness
@@ -185,15 +188,16 @@ public class RegistrationController {
         return DigestUtils.sha256(response.get("clientDataJSON").asText());
     }
 
-    private AuthData step8(JsonNode response) throws RegistrationFailedException {
+    private JsonNode step7to8(JsonNode response) throws RegistrationFailedException {
         try {
-          ObjectMapper cborMapper = new ObjectMapper(cborFactory);
-          JsonNode attestationData =
-              cborMapper.readTree(base64UrlDecoder.decode(response.get("attestationObject").asText()));
-          return authenticatorDataParser.parseAttestationData(attestationData.get("authData").asText());
+            return cborMapper.readTree(base64UrlDecoder.decode(response.get("attestationObject").asText()));
         } catch (IOException e) {
-          throw new RegistrationFailedException(8);
+            throw new RegistrationFailedException(8);
         }
+    }
+
+    private AuthData step8(JsonNode attestationData){
+          return authenticatorDataParser.parseAttestationData(attestationData.get("authData").asText());
     }
 
     private void step9(AuthData authData) throws RegistrationFailedException {
@@ -215,9 +219,17 @@ public class RegistrationController {
         }
     }
 
-    private void step12() throws RegistrationFailedException {}
+    private void step12(AuthData authData) throws RegistrationFailedException {
+        if(authData.isExtensionDataIncludedFlagSet()){
+            throw new RegistrationFailedException(12);
+        }
+    }
 
-    private void step13() throws RegistrationFailedException {}
+    private void step13(JsonNode attestationData) throws RegistrationFailedException {
+        if(!attestationData.get("fmt").asText().equals("packed")){//should be extended to a list of values that are permitted
+            throw new RegistrationFailedException(13);
+        }
+    }
 
     private void step14() throws RegistrationFailedException {}
 
