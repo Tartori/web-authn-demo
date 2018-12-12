@@ -1,5 +1,17 @@
 # Journal
 
+## 2018.12.12
+
+* debugged why auth data is still missing
+*         node.put("attestation", "direct"); was missing apparently
+* tested against dev.webauthn.demo instead of localhost
+
+## 2018.12.10
+
+* created local ssl cert
+* searched for https server that can be launched from terminal
+* set up stuff
+
 ## 2018.12.03 Project Meeting
 
 ### 2. Tasks
