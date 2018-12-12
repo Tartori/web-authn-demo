@@ -31,7 +31,7 @@ public class RegistrationController {
 
     boolean failIfCredentialIsAlreadyInUse = true;
     boolean checkUserVerified=false;
-
+    boolean checkTokenBinding=false;
     @Autowired
     private AuthenticatorDataParser authenticatorDataParser;
     @Autowired
@@ -175,7 +175,7 @@ public class RegistrationController {
     }
 
     private void step6(JsonNode decodedClientData) throws RegistrationFailedException {
-        if(!decodedClientData.has("tokenBinding")&&false){
+        if(!decodedClientData.has("tokenBinding")&&checkTokenBinding){
             //well currently we don't check this.
             throw new RegistrationFailedException(6);
         }
