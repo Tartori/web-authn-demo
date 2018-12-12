@@ -1,6 +1,8 @@
 package ch.bfh.ti;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
@@ -29,8 +31,16 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**").allowedMethods("GET", "POST", "PUT");
     }
 
+    @Autowired
+    private CBORFactory cborFactory;
     @Bean
-    public CBORFactory getCborFactory(){return new CBORFactory();}
+    public ObjectMapper getCborMapper(){
+        return new ObjectMapper(cborFactory);
+    }
+    @Bean
+    public CBORFactory getCborFactory(){
+        return new CBORFactory();
+    }
     @Bean
     public Base64.Encoder getBase64UrlEncoder() {
         return Base64.getUrlEncoder().withoutPadding();
