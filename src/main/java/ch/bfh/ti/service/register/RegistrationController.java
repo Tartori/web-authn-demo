@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -37,8 +38,6 @@ public class RegistrationController {
     private ObjectMapper objectMapper;
     @Autowired
     private Base64StringGenerator base64StringGenerator;
-    @Value("${fido.domain}")
-    private String domain;
     @Autowired
     Base64.Decoder base64UrlDecoder;
     @Autowired
@@ -62,7 +61,7 @@ public class RegistrationController {
         sensitiveUser.setRegistered(false);
         sensitiveUser.setId(base64StringGenerator.generateNewString());
         sensitiveUser.setChallenge(base64StringGenerator.generateNewString());
-        sensitiveUser.setDomain("http://localhost:8000");
+        sensitiveUser.setDomain("dev.webauthn.demo");
         ObjectNode node = objectMapper
                 .createObjectNode()
                 .putObject("publicKey");
@@ -70,7 +69,7 @@ public class RegistrationController {
         node.put("fidoResponse", "direct");
         node.putObject("rp")
                 .put("name", "BFH")
-                .put("domain", sensitiveUser.getDomain());
+                .put("id", sensitiveUser.getDomain());
         node.putObject("user")
                 .put("id", sensitiveUser.getId())
                 .put("name", sensitiveUser.getUsername())
@@ -79,6 +78,7 @@ public class RegistrationController {
                 .addObject()
                 .put("type","public-key")
                 .put("alg", -7);
+        node.put("attestation", "direct");
         node.put("timeout", 60*1000);
         node.put("errorMessage", "");
         node.put("status", "ok");
@@ -112,7 +112,7 @@ public class RegistrationController {
         }
 
         SensitiveUser sensitiveUser=sensitiveUserCheck.get();
-        if(!sensitiveUser.getDomain().equals(decodedClientData.get("origin").asText())){
+        if(!(decodedClientData.get("origin").asText()).contains(sensitiveUser.getDomain())){
             return badRequestResponse();
         }
 
@@ -123,8 +123,8 @@ public class RegistrationController {
         if(!authData.isUserPresentFlagSet()){
             return badRequestResponse();
         }
-        byte[] rpIdHash = DigestUtils.sha256("localhost");
-        if(!Arrays.equals(rpIdHash, authData.getRpIdHash())&&false){//todo currently always true for some reason...
+        byte[] rpIdHash = DigestUtils.sha256("dev.webauthn.demo");
+        if(!Arrays.equals(rpIdHash, authData.getRpIdHash())){
             return badRequestResponse();
         }
 
@@ -134,13 +134,14 @@ public class RegistrationController {
 
         byte[] clientHash=DigestUtils.sha256(response.get("clientDataJSON").asText());
 
-
         sensitiveUser.setCredentialId(base64UrlEncoder.encodeToString(authData.getCredId()));
         sensitiveUser.setRegistered(true);
 
 
+
         ObjectNode node = objectMapper
                 .createObjectNode();
+        node.put("username",sensitiveUser.getUsername());
         node.put("errorMessage", "");
         node.put("status", "ok");
         userRepository.updateUser(sensitiveUser);

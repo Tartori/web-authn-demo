@@ -24,7 +24,7 @@ $('#register').submit(function (event) {
     })
     .then((response) => {
       if (response.status === 'ok') {
-        loadMainContainer()
+        loadMainContainer(response.username)
       } else {
         alert(`Server responed with error. The message is: ${response.message}`);
       }
