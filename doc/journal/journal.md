@@ -5,6 +5,7 @@
 * debugged why auth data is still missing
 *         node.put("attestation", "direct"); was missing apparently
 * tested against dev.webauthn.demo instead of localhost
+* lots of refactoring. Done to step 13
 
 ## 2018.12.10
 
