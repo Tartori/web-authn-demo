@@ -139,6 +139,7 @@ public class RegistrationController {
         }
         return inputJson.get("response");
     }
+
     private JsonNode step2(final JsonNode inputJson) throws RegistrationFailedException {
         try {
             return objectMapper.readTree(
@@ -151,11 +152,13 @@ public class RegistrationController {
             throw new RegistrationFailedException(2);
         }
     }
+
     private void step3(final JsonNode decodedClientData) throws RegistrationFailedException {
         if(!decodedClientData.get("type").asText().equals("webauthn.create")){
             throw new RegistrationFailedException(3);
         }
     }
+
     private SensitiveUser step4(final JsonNode decodedClientData) throws RegistrationFailedException {
         Optional<SensitiveUser> sensitiveUserCheck =
                 userRepository.getUserByChallengeAndRegistered(decodedClientData.get("challenge").asText(), false);
@@ -164,20 +167,24 @@ public class RegistrationController {
         }
         return sensitiveUserCheck.get();
     }
+
     private void step5(JsonNode decodedClientData, SensitiveUser sensitiveUser) throws RegistrationFailedException {
         if(!(decodedClientData.get("origin").asText()).contains(sensitiveUser.getDomain())){
             throw new RegistrationFailedException(5);
         }
     }
+
     private void step6(JsonNode decodedClientData) throws RegistrationFailedException {
         if(!decodedClientData.has("tokenBinding")&&false){
             //well currently we don't check this.
             throw new RegistrationFailedException(6);
         }
     }
+
     private byte[] step7(JsonNode response) {
         return DigestUtils.sha256(response.get("clientDataJSON").asText());
     }
+
     private AuthData step8(JsonNode response) throws RegistrationFailedException {
         try {
           ObjectMapper cborMapper = new ObjectMapper(cborFactory);
@@ -188,36 +195,47 @@ public class RegistrationController {
           throw new RegistrationFailedException(8);
         }
     }
+
     private void step9(AuthData authData) throws RegistrationFailedException {
         byte[] rpIdHash = DigestUtils.sha256("dev.webauthn.demo");
         if(!Arrays.equals(rpIdHash, authData.getRpIdHash())){
             throw new RegistrationFailedException(9);
         }
     }
+
     private void step10(AuthData authData) throws RegistrationFailedException {
         if(!authData.isUserPresentFlagSet()){
             throw new RegistrationFailedException(10);
         }
     }
+
     private void step11(AuthData authData) throws RegistrationFailedException {
         if(!authData.isUserVerifiedFlagSet()&&checkUserVerified){
             throw new RegistrationFailedException(11);
         }
     }
+
     private void step12() throws RegistrationFailedException {}
+
     private void step13() throws RegistrationFailedException {}
+
     private void step14() throws RegistrationFailedException {}
+
     private void step15() throws RegistrationFailedException {}
+
     private void step16() throws RegistrationFailedException {}
+
     private void step17(AuthData authData) throws RegistrationFailedException {
         if(userRepository.getUserByCredential(base64UrlEncoder.encodeToString(authData.getCredId())).isPresent() && failIfCredentialIsAlreadyInUse){
             throw new RegistrationFailedException(17);
         }
     }
+
     private void step18(SensitiveUser sensitiveUser, AuthData authData){
         sensitiveUser.setCredentialId(base64UrlEncoder.encodeToString(authData.getCredId()));
         sensitiveUser.setRegistered(true);
     }
+
     private void step19() throws RegistrationFailedException  {}
 
     private ObjectNode badRequestResponse(int step) {
