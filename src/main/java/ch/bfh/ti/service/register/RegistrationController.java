@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -252,7 +257,18 @@ public class RegistrationController {
 
     private void step14(AuthData authData, JsonNode attStatement, byte[] clientDataHash, X509Certificate cert) throws RegistrationFailedException {
         JsonNode sig = attStatement.get("sig");
-
+        byte[] signedData = (byte[])ArrayUtils.addAll(authData.getAuthDataDecoded(), clientDataHash);
+        final String signatureAlgorithmName = "SHA256withECDSA";
+        try {
+            Signature signatureVerifier = Signature.getInstance(signatureAlgorithmName);
+            signatureVerifier.initVerify(cert.getPublicKey());
+            signatureVerifier.update(clientDataHash);
+            if(!signatureVerifier.verify(sig.binaryValue())){
+                throw new RegistrationFailedException(14);
+            }
+        }  catch (Exception e) {
+            throw new RegistrationFailedException(14);
+        }
     }
 
     private void step15() throws RegistrationFailedException {}
