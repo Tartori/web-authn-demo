@@ -6,6 +6,7 @@ import ch.bfh.ti.repository.user.SensitiveUser;
 import ch.bfh.ti.repository.user.User;
 import ch.bfh.ti.repository.user.UserRepository;
 import ch.bfh.ti.utils.Base64StringGenerator;
+import ch.bfh.ti.utils.CertificateParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
@@ -27,7 +30,6 @@ import java.util.Optional;
 @RequestMapping(RegistrationController.RESOURCE)
 public class RegistrationController {
     static final String RESOURCE = "/register";
-
 
     boolean failIfCredentialIsAlreadyInUse = true;
     boolean checkUserVerified=false;
@@ -41,13 +43,14 @@ public class RegistrationController {
     @Autowired
     private Base64StringGenerator base64StringGenerator;
     @Autowired
-    Base64.Decoder base64UrlDecoder;
+    private Base64.Decoder base64UrlDecoder;
     @Autowired
-    Base64.Encoder base64UrlEncoder;
+    private Base64.Encoder base64UrlEncoder;
     @Autowired
-    CBORFactory cborFactory;
+    private CBORFactory cborFactory;
     @Autowired
-    ObjectMapper cborMapper;
+    private CertificateParser certificateParser;
+
 
     @PostMapping
     public ObjectNode create(@RequestBody final User user) {
@@ -118,15 +121,16 @@ public class RegistrationController {
         step5(decodedClientData, sensitiveUser);//check origin
         step6(decodedClientData);//check token binding
         byte[] clientHash=step7(response); //calculate client hash because why not?
-        JsonNode attestationData = step7to8(response);
+        JsonNode attestationData = getAttestationData(response);
         AuthData authData = step8(attestationData); //perform CBOR decoding
         step9(authData); //check rpid hash to origin - hashed
         step10(authData); //check for userPresent flag
         step11(authData); //check for userVerified flag
         step12(authData); //various checks on extensions in authData
         step13(attestationData); //check check fmt format
-        step14(); // check attStmt signature
-        step15(); //obtain trust anchors
+        X509Certificate cert = getCertificate(attestationData);
+        step14(authData, attestationData.get("attStmt"), clientHash, cert); // check attStmt signature
+        step15(); // obtain trust anchors
         step16(); // assess the trustworthiness
         step17(authData); // check if credential not already in use
         step18(sensitiveUser, authData); // associate credential to user
@@ -188,8 +192,9 @@ public class RegistrationController {
         return DigestUtils.sha256(response.get("clientDataJSON").asText());
     }
 
-    private JsonNode step7to8(JsonNode response) throws RegistrationFailedException {
+    private JsonNode getAttestationData(JsonNode response) throws RegistrationFailedException {
         try {
+            ObjectMapper cborMapper = new ObjectMapper(cborFactory);
             return cborMapper.readTree(base64UrlDecoder.decode(response.get("attestationObject").asText()));
         } catch (IOException e) {
             throw new RegistrationFailedException(8);
@@ -231,7 +236,24 @@ public class RegistrationController {
         }
     }
 
-    private void step14() throws RegistrationFailedException {}
+    private X509Certificate getCertificate(JsonNode attestationData) throws RegistrationFailedException{
+        X509Certificate certificate;
+        try {
+            Optional<X509Certificate> x509CertificateOptional = certificateParser.getX5cAttestationCert(attestationData.get("attStmt"));
+            if(!x509CertificateOptional.isPresent()){
+                throw new RegistrationFailedException(14);
+            }
+            certificate=x509CertificateOptional.get();
+        } catch (CertificateException e) {
+            throw new RegistrationFailedException(14);
+        }
+        return certificate;
+    }
+
+    private void step14(AuthData authData, JsonNode attStatement, byte[] clientDataHash, X509Certificate cert) throws RegistrationFailedException {
+        JsonNode sig = attStatement.get("sig");
+
+    }
 
     private void step15() throws RegistrationFailedException {}
 
