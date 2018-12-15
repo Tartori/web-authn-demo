@@ -1,5 +1,11 @@
 # Journal
 
+## 2018.12.15
+
+Issues:
+
+* signature is not easily verifiable because of different encoding etc. Trial + Error
+
 ## 2018.12.12
 
 * debugged why auth data is still missing
