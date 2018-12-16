@@ -1,5 +1,10 @@
 # Journal
 
+## 2018.12.17
+
+* signature could be verified in registration. Issue was mostly wrongly hashed client data - used string instead of byte[].
+* registration complete except step 15, 16 which can be ignored for now. 
+
 ## 2018.12.15
 
 Issues:
