@@ -36,7 +36,6 @@ public class AuthenticatorDataParser {
         else {
             buffer = base64UrlDecoder.decode(incomingAuthData.getBytes());
         }
-        authData.setAuthDataDecoded(buffer.clone());
         int offset = 0;
         authData.setRpIdHash(Arrays.copyOfRange(buffer, offset, offset+=32));
         authData.setFlagsBuf(Arrays.copyOfRange(buffer, offset, offset+=1));

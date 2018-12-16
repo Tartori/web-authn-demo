@@ -9,6 +9,7 @@ import ch.bfh.ti.utils.Base64StringGenerator;
 import ch.bfh.ti.utils.CertificateParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BinaryNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -22,7 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -124,7 +128,7 @@ public class RegistrationController {
         SensitiveUser sensitiveUser = step4(decodedClientData);//check if challenge was sent
         step5(decodedClientData, sensitiveUser);//check origin
         step6(decodedClientData);//check token binding
-        byte[] clientHash=step7(response); //calculate client hash because why not?
+        byte[] clientHash=step7(response.get("clientDataJSON")); //calculate client hash because why not?
         JsonNode attestationData = getAttestationData(response);
         AuthData authData = step8(attestationData); //perform CBOR decoding
         step9(authData); //check rpid hash to origin - hashed
@@ -133,7 +137,8 @@ public class RegistrationController {
         step12(authData); //various checks on extensions in authData
         step13(attestationData); //check check fmt format
         X509Certificate cert = getCertificate(attestationData);
-        step14(authData, attestationData.get("attStmt"), clientHash, cert); // check attStmt signature
+        JsonNode sig = attestationData.get("attStmt").get("sig");
+        step14(attestationData.get("authData"), attestationData.get("attStmt"), clientHash, cert); // check attStmt signature
         step15(); // obtain trust anchors
         step16(); // assess the trustworthiness
         step17(authData); // check if credential not already in use
@@ -192,8 +197,8 @@ public class RegistrationController {
         }
     }
 
-    private byte[] step7(JsonNode response) {
-        return DigestUtils.sha256(response.get("clientDataJSON").asText());
+    private byte[] step7(JsonNode clientData) {
+        return DigestUtils.sha256(base64UrlDecoder.decode(clientData.asText()));
     }
 
     private JsonNode getAttestationData(JsonNode response) throws RegistrationFailedException {
@@ -254,11 +259,11 @@ public class RegistrationController {
         return certificate;
     }
 
-    private void step14(AuthData authData, JsonNode attStatement, byte[] clientDataHash, X509Certificate cert) throws RegistrationFailedException {
+    private void step14(JsonNode authDataBin, JsonNode attStatement, byte[] clientDataHash, X509Certificate cert) throws RegistrationFailedException {
         JsonNode sig = attStatement.get("sig");
-        byte[] signedData = ArrayUtils.addAll(authData.getAuthDataDecoded(), clientDataHash);
         final String signatureAlgorithmName = "SHA256withECDSA";
         try {
+            byte[] signedData = ArrayUtils.addAll(authDataBin.binaryValue(), clientDataHash);
             Signature signatureVerifier = Signature.getInstance(signatureAlgorithmName, bouncyCastleProvider);
             signatureVerifier.initVerify(cert.getPublicKey());
             signatureVerifier.update(signedData);
