@@ -18,6 +18,7 @@ public class AuthData {
     private byte[] attestationBuffer;
     private int keyType;
     private byte[] authDataDecoded;
+    private byte[] authDataEncoded;
 
     public byte[] getRpIdHash() {
         return rpIdHash;
@@ -125,4 +126,11 @@ public class AuthData {
         return flagsBuf[0];
     }
 
+    public byte[] getAuthDataEncoded() {
+        return authDataEncoded;
+    }
+
+    public void setAuthDataEncoded(byte[] authDataEncoded) {
+        this.authDataEncoded = authDataEncoded;
+    }
 }

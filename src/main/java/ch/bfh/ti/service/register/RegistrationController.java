@@ -11,8 +11,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,10 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
-import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -35,7 +33,7 @@ import java.util.Optional;
 @RequestMapping(RegistrationController.RESOURCE)
 public class RegistrationController {
     static final String RESOURCE = "/register";
-
+    static final int COSE_ALG_ECDSA_W_SHA256 = -7;
     boolean failIfCredentialIsAlreadyInUse = true;
     boolean checkUserVerified=false;
     boolean checkTokenBinding=false;
@@ -55,7 +53,8 @@ public class RegistrationController {
     private CBORFactory cborFactory;
     @Autowired
     private CertificateParser certificateParser;
-
+    @Autowired
+    private BouncyCastleProvider bouncyCastleProvider;
 
     @PostMapping
     public ObjectNode create(@RequestBody final User user) {
@@ -89,7 +88,7 @@ public class RegistrationController {
         node.putArray("pubKeyCredParams")
                 .addObject()
                 .put("type","public-key")
-                .put("alg", -7);
+                .put("alg", COSE_ALG_ECDSA_W_SHA256);
         node.put("attestation", "direct");
         node.put("timeout", 60*1000);
         node.put("errorMessage", "");
@@ -257,12 +256,12 @@ public class RegistrationController {
 
     private void step14(AuthData authData, JsonNode attStatement, byte[] clientDataHash, X509Certificate cert) throws RegistrationFailedException {
         JsonNode sig = attStatement.get("sig");
-        byte[] signedData = (byte[])ArrayUtils.addAll(authData.getAuthDataDecoded(), clientDataHash);
+        byte[] signedData = ArrayUtils.addAll(authData.getAuthDataDecoded(), clientDataHash);
         final String signatureAlgorithmName = "SHA256withECDSA";
         try {
-            Signature signatureVerifier = Signature.getInstance(signatureAlgorithmName);
+            Signature signatureVerifier = Signature.getInstance(signatureAlgorithmName, bouncyCastleProvider);
             signatureVerifier.initVerify(cert.getPublicKey());
-            signatureVerifier.update(clientDataHash);
+            signatureVerifier.update(signedData);
             if(!signatureVerifier.verify(sig.binaryValue())){
                 throw new RegistrationFailedException(14);
             }
