@@ -17,7 +17,7 @@ public class AuthData {
     private byte[] signatureBaseFields;
     private byte[] attestationBuffer;
     private int keyType;
-    private byte[] authDataDecoded;
+    private byte[] authDataEncoded;
 
     public byte[] getRpIdHash() {
         return rpIdHash;
@@ -95,15 +95,6 @@ public class AuthData {
     public void setKeyType(int keyType) {
         this.keyType = keyType;
     }
-
-    public byte[] getAuthDataDecoded() {
-        return authDataDecoded;
-    }
-
-    public void setAuthDataDecoded(byte[] authDataDecoded) {
-        this.authDataDecoded = authDataDecoded;
-    }
-
     public boolean isAttestedCredentialDataFlagSet(){
         return (flagsBuf[0]&AT_FLAG)==AT_FLAG;
     }
@@ -117,8 +108,19 @@ public class AuthData {
         return (flagsBuf[0]&ED_FLAG)==ED_FLAG;
     }
 
+    public PubKey getPubKey(){
+        return new PubKey(getCOSEPublicKey());
+    }
+
     public byte getFlags() {
         return flagsBuf[0];
     }
 
+    public byte[] getAuthDataEncoded() {
+        return authDataEncoded;
+    }
+
+    public void setAuthDataEncoded(byte[] authDataEncoded) {
+        this.authDataEncoded = authDataEncoded;
+    }
 }

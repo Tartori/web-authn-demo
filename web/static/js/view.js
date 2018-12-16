@@ -16,8 +16,8 @@ $('#toRegistration').click(function (e) {
     $('#registerContainer').show();
 })
 
-let loadMainContainer = () => {
-    return fetch('http://localhost:8080/users/rest')
+let loadMainContainer = (username) => {
+    return fetch('http://localhost:8080/users/' + username)
         .then((response) => response.json())
         .then((response) => {
             if (response.status === 'ok') {
