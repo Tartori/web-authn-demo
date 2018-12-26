@@ -1,5 +1,17 @@
 # Journal
 
+## 2018.12.18 Project Meeting
+
+### Status
+
+* Registration works without trust anchors
+* Signature can be verified
+
+### Next Steps
+
+* Login
+* Paper
+
 ## 2018.12.17
 
 * signature could be verified in registration. Issue was mostly wrongly hashed client data - used string instead of byte[].
