@@ -6,6 +6,7 @@ public class SensitiveUser extends User {
     private String challenge ="";
     private String domain="";
     private String credentialId="";
+    private String publicKey="";
 
     public SensitiveUser(){}
 
@@ -62,5 +63,13 @@ public class SensitiveUser extends User {
 
     public void setCredentialId(String credentialId) {
         this.credentialId = credentialId;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 }

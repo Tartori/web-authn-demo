@@ -287,6 +287,8 @@ public class RegistrationController {
 
     private void step18(SensitiveUser sensitiveUser, AuthData authData){
         sensitiveUser.setCredentialId(base64UrlEncoder.encodeToString(authData.getCredId()));
+        sensitiveUser.setPublicKey(base64UrlEncoder.encodeToString(authData.getCOSEPublicKey()));
+        sensitiveUser.setChallenge("");
         sensitiveUser.setRegistered(true);
     }
 
