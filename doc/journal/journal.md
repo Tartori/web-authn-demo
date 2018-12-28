@@ -1,5 +1,20 @@
 # Journal
 
+## 2018.12.28
+
+### Issues
+
+* as expected parsing COSE PK is not trivial. 
+
+### Status
+
+* Login and Registration works now. Will now move towards paper and maybe some smaller trials. Was fun coding.
+
+## 2018.12.27 
+
+* Login coding started.
+* Expected Issues: COSE Public Key parsing, some other minor but annoying issues. 
+
 ## 2018.12.18 Project Meeting
 
 ### Status
@@ -19,7 +34,7 @@
 
 ## 2018.12.15
 
-Issues:
+### Issues
 
 * signature is not easily verifiable because of different encoding etc. Trial + Error
 
