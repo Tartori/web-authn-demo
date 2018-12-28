@@ -2,7 +2,7 @@
 
 For detailed documentation check doc/paper
 
-##Important notes:
+## Important notes:
 
 Always use HTTPS
 ``` sh
