@@ -41,6 +41,7 @@ public class RegistrationController {
     private static final boolean failIfCredentialIsAlreadyInUse = true;
     private static final boolean checkUserVerified=false;
     private static final boolean checkTokenBinding=false;
+    public static final String DOMAIN="dev.webauthn.demo";
     @Autowired
     private AuthenticatorDataParser authenticatorDataParser;
     @Autowired
@@ -76,7 +77,7 @@ public class RegistrationController {
         sensitiveUser.setRegistered(false);
         sensitiveUser.setId(base64StringGenerator.generateNewString());
         sensitiveUser.setChallenge(base64StringGenerator.generateNewString());
-        sensitiveUser.setDomain("dev.webauthn.demo");
+        sensitiveUser.setDomain(DOMAIN);
         ObjectNode node = objectMapper
                 .createObjectNode()
                 .putObject("publicKey");
@@ -126,7 +127,7 @@ public class RegistrationController {
         JsonNode decodedClientData = step2(inputJson);//decode client data
         step3(decodedClientData);//check for correct method
         SensitiveUser sensitiveUser = step4(decodedClientData);//check if challenge was sent
-        step5(decodedClientData, sensitiveUser);//check origin
+        step5(decodedClientData);//check origin
         step6(decodedClientData);//check token binding
         byte[] clientHash=step7(response.get("clientDataJSON")); //calculate client hash because why not?
         JsonNode attestationData = getAttestationData(response);
@@ -184,8 +185,8 @@ public class RegistrationController {
         return sensitiveUserCheck.get();
     }
 
-    private void step5(JsonNode decodedClientData, SensitiveUser sensitiveUser) throws RegistrationFailedException {
-        if(!(decodedClientData.get("origin").asText()).contains(sensitiveUser.getDomain())){
+    private void step5(JsonNode decodedClientData) throws RegistrationFailedException {
+        if(!(decodedClientData.get("origin").asText()).contains(DOMAIN)){
             throw new RegistrationFailedException(5);
         }
     }
@@ -215,7 +216,7 @@ public class RegistrationController {
     }
 
     private void step9(AuthData authData) throws RegistrationFailedException {
-        byte[] rpIdHash = DigestUtils.sha256("dev.webauthn.demo");
+        byte[] rpIdHash = DigestUtils.sha256(DOMAIN);
         if(!Arrays.equals(rpIdHash, authData.getRpIdHash())){
             throw new RegistrationFailedException(9);
         }
@@ -288,7 +289,7 @@ public class RegistrationController {
     private void step18(SensitiveUser sensitiveUser, AuthData authData){
         sensitiveUser.setCredentialId(base64UrlEncoder.encodeToString(authData.getCredId()));
         sensitiveUser.setPublicKey(base64UrlEncoder.encodeToString(authData.getCOSEPublicKey()));
-        sensitiveUser.setAttestedCredentialData(base64UrlEncoder.encodeToString(authData.getAttestationBuffer()));
+        sensitiveUser.setAuthData(authData);
         sensitiveUser.setChallenge("");
         sensitiveUser.setRegistered(true);
     }

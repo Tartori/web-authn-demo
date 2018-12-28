@@ -1,5 +1,7 @@
 package ch.bfh.ti.repository.user;
 
+import ch.bfh.ti.repository.auth.AuthData;
+
 public class SensitiveUser extends User {
     private boolean registered=false;
     private String id="";
@@ -7,7 +9,7 @@ public class SensitiveUser extends User {
     private String domain="";
     private String credentialId="";
     private String publicKey="";
-    private String attestedCredentialData="";
+    private AuthData authData;
 
     public SensitiveUser(){}
 
@@ -74,11 +76,11 @@ public class SensitiveUser extends User {
         this.publicKey = publicKey;
     }
 
-    public String getAttestedCredentialData() {
-        return attestedCredentialData;
+    public AuthData getAuthData() {
+        return authData;
     }
 
-    public void setAttestedCredentialData(String attestedCredentialData) {
-        this.attestedCredentialData = attestedCredentialData;
+    public void setAuthData(AuthData authData) {
+        this.authData = authData;
     }
 }

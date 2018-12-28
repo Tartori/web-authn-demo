@@ -1,5 +1,6 @@
 package ch.bfh.ti.repository.auth;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 public class AuthData {
@@ -11,7 +12,7 @@ public class AuthData {
     private byte[] rpIdHash;
     private byte[] flagsBuf;
     private byte flags;
-    private byte[] counters;
+    private byte[] signCount;
     private byte[] aaguid;
     private byte[] credId;
     private byte[] signatureBaseFields;
@@ -35,20 +36,6 @@ public class AuthData {
     public AuthData setFlagsBuf(byte[] flagsBuf) {
         this.flagsBuf = flagsBuf;
         return this;
-    }
-
-    public byte[] getCounters() {
-        return counters;
-    }
-
-    public AuthData setCounters(byte[] counters) {
-        this.counters = counters;
-        return this;
-    }
-
-    public long getCounter(){
-        //in the buffer is an unsigned int... that's why we use a long
-        return ByteBuffer.wrap(getCounters()).asLongBuffer().get();
     }
 
     public byte[] getAaguid() {
@@ -122,5 +109,14 @@ public class AuthData {
 
     public void setAuthDataEncoded(byte[] authDataEncoded) {
         this.authDataEncoded = authDataEncoded;
+    }
+
+    public BigInteger getSignCount(){
+        //in the buffer is an unsigned int... that's why we use a long
+        return new BigInteger(signCount);
+    }
+
+    public void setSignCount(byte[] signCount) {
+        this.signCount = signCount;
     }
 }

@@ -39,7 +39,7 @@ public class AuthenticatorDataParser {
         int offset = 0;
         authData.setRpIdHash(Arrays.copyOfRange(buffer, offset, offset+=32));
         authData.setFlagsBuf(Arrays.copyOfRange(buffer, offset, offset+=1));
-        authData.setCounters(Arrays.copyOfRange(buffer, offset, offset+=4));
+        authData.setSignCount(Arrays.copyOfRange(buffer, offset, offset+=4));
         authData.setAttestationBuffer(Arrays.copyOfRange(buffer, offset, buffer.length));
         if(authData.isAttestedCredentialDataFlagSet()){
             authData.setAaguid(Arrays.copyOfRange(buffer, offset, offset+=16));

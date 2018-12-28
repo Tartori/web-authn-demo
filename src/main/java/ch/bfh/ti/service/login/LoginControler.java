@@ -4,12 +4,17 @@ import ch.bfh.ti.repository.auth.AuthData;
 import ch.bfh.ti.repository.auth.AuthenticatorDataParser;
 import ch.bfh.ti.repository.user.SensitiveUser;
 import ch.bfh.ti.repository.user.UserRepository;
+import ch.bfh.ti.service.register.RegistrationController;
 import ch.bfh.ti.utils.Base64StringGenerator;
+import ch.bfh.ti.utils.COSEHelper;
 import ch.bfh.ti.utils.CertificateParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import com.upokecenter.cbor.CBORObject;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +23,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.security.*;
+import java.security.interfaces.ECPublicKey;
+import java.security.spec.*;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -46,6 +56,8 @@ public class LoginControler {
     private Base64.Encoder base64UrlEncoder;
     @Autowired
     private CBORFactory cborFactory;
+    @Autowired
+    private COSEHelper coseHelper;
     @Autowired
     private CertificateParser certificateParser;
     @Autowired
@@ -123,9 +135,16 @@ public class LoginControler {
         JsonNode decodedClientData = step5and6(cData);
         step7(decodedClientData);
         step8(decodedClientData,user);
+        step9(decodedClientData);
         step10(decodedClientData);
-        AuthData authDataParsed = step11(authData);
-        step8(decodedClientData,user);
+        AuthData authDataParsed = getAuthData(authData);
+        step11(authDataParsed);
+        step12(authDataParsed);
+        step13(authDataParsed);
+        step14(authDataParsed);
+        byte[] clientHash = step15(cData);
+        step16(publicKey, authData, clientHash, sig);
+        step17(authDataParsed, user);
         return user;
     }
 
@@ -188,38 +207,96 @@ public class LoginControler {
         }
     }
 
-    private void step9(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
-        if(!clientData.get("origin").asText().contains(user.getDomain())){
+    private void step9(JsonNode clientData) throws LoginFailedException{
+        if(!clientData.get("origin").asText().contains(RegistrationController.DOMAIN)){
             throw new LoginFailedException(9);
         }
     }
+
     private void step10(JsonNode clientData) throws LoginFailedException{
         if(!clientData.has("tokenBinding")&&checkTokenBinding){
             //well currently we don't check this.
             throw new LoginFailedException(10);
         }
     }
-    private AuthData step11(String authData) throws LoginFailedException{
+
+    private AuthData getAuthData(String authData){
         return authenticatorDataParser.parseAssertionData(authData);
     }
-    private void step12(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
+    private void step11(AuthData authData) throws LoginFailedException{
+        byte[] rpIdHash = DigestUtils.sha256(RegistrationController.DOMAIN);
+        if(!Arrays.equals(rpIdHash, authData.getRpIdHash())){
+            throw new LoginFailedException(11);
+        }
     }
-    private void step13(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
+    private void step12(AuthData authData) throws LoginFailedException {
+        if(!authData.isUserPresentFlagSet()){
+            throw new LoginFailedException(12);
+        }
     }
-    private void step14(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
+    private void step13(AuthData authData) throws LoginFailedException {
+        if(!authData.isUserVerifiedFlagSet()&&checkUserVerified){
+            throw new LoginFailedException(13);
+        }
     }
-    private void step15(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
+    private void step14(AuthData authData) throws LoginFailedException{
+        if (authData.isExtensionDataIncludedFlagSet()) {
+            throw new LoginFailedException(14);
+        }
     }
-    private void step16(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
+    private byte[] step15(String clientData) {
+        return DigestUtils.sha256(base64UrlDecoder.decode(clientData));
     }
-    private void step17(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
+    private void step16(String cosePublicKey, String authDataBin, byte[] clientDataHash, String sig) throws LoginFailedException{
+        final String signatureAlgorithmName = "SHA256withECDSA";
+
+        try {
+            PublicKey publicKey = getPublicKey(cosePublicKey);
+            byte[] signedData = ArrayUtils.addAll(base64UrlDecoder.decode(authDataBin), clientDataHash);
+            Signature signatureVerifier = Signature.getInstance(signatureAlgorithmName, bouncyCastleProvider);
+            signatureVerifier.initVerify(publicKey);
+            signatureVerifier.update(signedData);
+            if(!signatureVerifier.verify(base64UrlDecoder.decode(sig))){
+                throw new LoginFailedException(16);
+            }
+        } catch (IOException | SignatureException | InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | InvalidParameterSpecException e) {
+            throw new LoginFailedException(16);
+        }
     }
+
+    private String cborToJsonString(String cosePublicKey){
+        return CBORObject.DecodeFromBytes(base64UrlDecoder.decode(cosePublicKey)).ToJSONString();
+    }
+
+    private PublicKey getPublicKey(String cosePublicKey)
+            throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidParameterSpecException, IOException {
+        JsonNode jsonPublicKey = objectMapper.readTree(cborToJsonString(cosePublicKey));
+
+        AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
+        parameters.init(new ECGenParameterSpec("secp256r1"));
+        ECParameterSpec params = parameters.getParameterSpec(ECParameterSpec.class);
+        BigInteger x = new BigInteger(1,base64UrlDecoder.decode(jsonPublicKey.get("-2").asText()));
+        BigInteger y = new BigInteger(1,base64UrlDecoder.decode(jsonPublicKey.get("-3").asText()));
+        final ECPoint w = new ECPoint(x, y);
+        final ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(w, params);
+
+        final KeyFactory keyFactory = KeyFactory.getInstance("EC");
+        return keyFactory.generatePublic(ecPublicKeySpec);
+    }
+
+    private void step17(AuthData authData, SensitiveUser user) throws LoginFailedException{
+        if(authData.getSignCount().compareTo(user.getAuthData().getSignCount())<1){
+            throw new LoginFailedException(17);
+        }
+        user.setAuthData(authData);
+    }
+
     private void step18(JsonNode clientData, SensitiveUser user) throws LoginFailedException{
 
     }

@@ -1,5 +1,6 @@
 package ch.bfh.ti;
 
+import ch.bfh.ti.utils.COSEHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
+import java.security.Provider;
 import java.util.Base64;
 
 @EnableWebMvc
@@ -32,8 +34,6 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**").allowedMethods("GET", "POST", "PUT");
     }
 
-    @Autowired
-    private CBORFactory cborFactory;
     @Bean
     public ObjectMapper getObjectMapper(){return new ObjectMapper();}
     @Bean
