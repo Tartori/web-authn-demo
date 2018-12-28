@@ -1,15 +1,12 @@
 package ch.bfh.ti;
 
-import ch.bfh.ti.utils.COSEHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
-import java.security.Provider;
 import java.util.Base64;
 
 @EnableWebMvc

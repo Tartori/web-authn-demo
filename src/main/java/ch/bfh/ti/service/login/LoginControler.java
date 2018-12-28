@@ -6,7 +6,6 @@ import ch.bfh.ti.repository.user.SensitiveUser;
 import ch.bfh.ti.repository.user.UserRepository;
 import ch.bfh.ti.service.register.RegistrationController;
 import ch.bfh.ti.utils.Base64StringGenerator;
-import ch.bfh.ti.utils.COSEHelper;
 import ch.bfh.ti.utils.CertificateParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.*;
-import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
 import java.util.Arrays;
 import java.util.Base64;
@@ -56,8 +54,6 @@ public class LoginControler {
     private Base64.Encoder base64UrlEncoder;
     @Autowired
     private CBORFactory cborFactory;
-    @Autowired
-    private COSEHelper coseHelper;
     @Autowired
     private CertificateParser certificateParser;
     @Autowired
