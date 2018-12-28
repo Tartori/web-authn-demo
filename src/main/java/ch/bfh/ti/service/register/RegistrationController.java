@@ -37,10 +37,10 @@ import java.util.Optional;
 @RequestMapping(RegistrationController.RESOURCE)
 public class RegistrationController {
     static final String RESOURCE = "/register";
-    static final int COSE_ALG_ECDSA_W_SHA256 = -7;
-    boolean failIfCredentialIsAlreadyInUse = true;
-    boolean checkUserVerified=false;
-    boolean checkTokenBinding=false;
+    private static final int COSE_ALG_ECDSA_W_SHA256 = -7;
+    private static final boolean failIfCredentialIsAlreadyInUse = true;
+    private static final boolean checkUserVerified=false;
+    private static final boolean checkTokenBinding=false;
     @Autowired
     private AuthenticatorDataParser authenticatorDataParser;
     @Autowired
@@ -288,6 +288,7 @@ public class RegistrationController {
     private void step18(SensitiveUser sensitiveUser, AuthData authData){
         sensitiveUser.setCredentialId(base64UrlEncoder.encodeToString(authData.getCredId()));
         sensitiveUser.setPublicKey(base64UrlEncoder.encodeToString(authData.getCOSEPublicKey()));
+        sensitiveUser.setAttestedCredentialData(base64UrlEncoder.encodeToString(authData.getAttestationBuffer()));
         sensitiveUser.setChallenge("");
         sensitiveUser.setRegistered(true);
     }

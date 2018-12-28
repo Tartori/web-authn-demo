@@ -3,4 +3,4 @@ server:
     8080
 
 fido:
-  domain: http://localhost:8080
+  domain: dev.webauthn.demo

@@ -7,6 +7,7 @@ public class SensitiveUser extends User {
     private String domain="";
     private String credentialId="";
     private String publicKey="";
+    private String attestedCredentialData="";
 
     public SensitiveUser(){}
 
@@ -71,5 +72,13 @@ public class SensitiveUser extends User {
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public String getAttestedCredentialData() {
+        return attestedCredentialData;
+    }
+
+    public void setAttestedCredentialData(String attestedCredentialData) {
+        this.attestedCredentialData = attestedCredentialData;
     }
 }

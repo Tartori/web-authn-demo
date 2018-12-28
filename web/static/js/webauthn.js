@@ -14,13 +14,13 @@ $('#register').submit(function (event) {
 
   getMakeCredentialsChallenge({ username, name })
     .then((response) => {
-      console.log(response);
       let publicKey = preformatMakeCredReq(response);
+      console.log(publicKey);
       return navigator.credentials.create({ publicKey })
     })
     .then((response) => {
       let makeCredResponse = publicKeyCredentialToJSON(response);
-      return sendWebAuthnResponse(makeCredResponse)
+      return sendWebAuthnRegisterResponse(makeCredResponse)
     })
     .then((response) => {
       if (response.status === 'ok') {
@@ -45,11 +45,12 @@ $('#login').submit(function (event) {
   getGetAssertionChallenge({ username })
     .then((response) => {
       let publicKey = preformatGetAssertReq(response);
-      return navigator.credentials.get({ publicKey })
+      console.log(publicKey);
+      return navigator.credentials.get({ publicKey });
     })
     .then((response) => {
       let getAssertionResponse = publicKeyCredentialToJSON(response);
-      return sendWebAuthnResponse(getAssertionResponse)
+      return sendWebAuthnLoginResponse(getAssertionResponse)
     })
     .then((response) => {
       if (response.status === 'ok') {
@@ -61,8 +62,24 @@ $('#login').submit(function (event) {
     .catch((error) => alert(error))
 })
 
+let sendWebAuthnLoginResponse = (body) => {
+  return fetch('http://localhost:8080/login/response', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  })
+    .then((response) => response.json())
+    .then((response) => {
+      if (response.status !== 'ok')
+        throw new Error(`Server responed with error. The message is: ${response.message}`);
 
-let sendWebAuthnResponse = (body) => {
+      return response
+    })
+}
+
+let sendWebAuthnRegisterResponse = (body) => {
   return fetch('http://localhost:8080/register/response', {
     method: 'POST',
     headers: {
