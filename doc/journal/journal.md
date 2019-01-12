@@ -4,16 +4,16 @@
 
 ### Issues
 
-* as expected parsing COSE PK is not trivial. 
+* as expected parsing COSE PK is not trivial.
 
 ### Status
 
 * Login and Registration works now. Will now move towards paper and maybe some smaller trials. Was fun coding.
 
-## 2018.12.27 
+## 2018.12.27
 
 * Login coding started.
-* Expected Issues: COSE Public Key parsing, some other minor but annoying issues. 
+* Expected Issues: COSE Public Key parsing, some other minor but annoying issues.
 
 ## 2018.12.18 Project Meeting
 
@@ -30,7 +30,7 @@
 ## 2018.12.17
 
 * signature could be verified in registration. Issue was mostly wrongly hashed client data - used string instead of byte[].
-* registration complete except step 15, 16 which can be ignored for now. 
+* registration complete except step 15, 16 which can be ignored for now.
 
 ## 2018.12.15
 
@@ -41,7 +41,7 @@
 ## 2018.12.12
 
 * debugged why auth data is still missing
-*         node.put("attestation", "direct"); was missing apparently
+* node.put("attestation", "direct"); was missing apparently
 * tested against dev.webauthn.demo instead of localhost
 * lots of refactoring. Done to step 13
 
