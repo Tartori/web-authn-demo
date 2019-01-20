@@ -1,0 +1,110 @@
+%!TEX program = lualatex
+\documentclass[a4paper, 11pt]{scrartcl}
+
+\usepackage{csquotes}
+
+\usepackage{kpfonts}
+\usepackage{polyglossia}
+\setdefaultlanguage{english}
+\usepackage[backend=biber, style=ieee]{biblatex}
+\addbibresource{paper.bib}
+\usepackage{graphicx}
+\begin{document}
+\title{Web Authn Implementation}
+\date{\today} 
+\author{ Julian Stampfli (\texttt{julianjimmy.stampfli@students.bfh.ch}) }
+\maketitle
+\setcounter{tocdepth}{2}
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+
+FIDO2 is a specification that aims to increase security for end users by eliminating the weaknesses that come with passwords. The main advantages are strong privacy, privacy protection, multiple choices, cost-efficiency and a layered approach. \cite{yubico:whatIsFido2} 
+
+The main force behind FIDO2 is the FIDO Alliance. Some members are Microsoft, Google and Yubico. Microsoft for instance wants to use FIDO2 for the windows hello login. \cite{yubico:ms} With that force behind it it has been adopted in all major web browser. \cite{fido:browser} There are also authenticators available from yubico. \cite{yubico:yubikey5}
+
+This paper discusses the implementation for the replying party when the user already has a fido2 authenticator.
+
+\section{FIDO2}
+
+FIDO2 is an authentication standart wich uses public key cryptography to authenticate an user. Compared to a password the user doesn't prove that he knows something but that he has something that he previously has registered with the application. This authenticator is an external device that interacts with the application through a protocol called CTAP. CTAP is also part of the FIDO2 specification but this paper does not go into detail of how this works. \cite{ctap}
+
+The WebAuthn specification forms the second part of FIDO2. This part deals with the Application that wants to authenticate an user. It contains two steps. Attestation which deals with registering a new user and assertion which handles the authentication of an existing user. Both functions are explained in the Section \ref{sec:replying_party}.
+
+\subsection{Authenticator}
+
+\subsubsection{Level 1}
+\subsubsection{Level 2}
+\subsubsection{Level 3}
+\subsubsection{Level 3+}
+
+\subsection{Principles}
+
+\subsection{FIDO2 vs FIDO U2F}
+
+\section{Replying Party}
+\label{sec:replying_party}
+
+\subsection{Registration / Attestation}
+
+\subsubsection{Create registration}
+
+\subsubsection{Verify registration}
+
+\paragraph{Step1}
+\paragraph{Step2}
+\paragraph{Step3}
+\paragraph{Step4}
+\paragraph{Step5}
+\paragraph{Step6}
+\paragraph{Step7}
+\paragraph{Step8}
+\paragraph{Step9}
+\paragraph{Step10}
+\paragraph{Step11}
+\paragraph{Step12}
+\paragraph{Step13}
+\paragraph{Step14}
+\paragraph{Step15}
+\paragraph{Step16}
+\paragraph{Step17}
+\paragraph{Step18}
+\paragraph{Step19}
+
+\subsubsection{Summary}
+
+\subsection{Login / Authentication}
+
+\subsubsection{Create registration}
+
+\subsubsection{Verify registration}
+
+\paragraph{Step1}
+\paragraph{Step2}
+\paragraph{Step3}
+\paragraph{Step4}
+\paragraph{Step5}
+\paragraph{Step6}
+\paragraph{Step7}
+\paragraph{Step8}
+\paragraph{Step9}
+\paragraph{Step10}
+\paragraph{Step11}
+\paragraph{Step12}
+\paragraph{Step13}
+\paragraph{Step14}
+\paragraph{Step15}
+\paragraph{Step16}
+\subsubsection{Summary}
+
+
+\section{Conclusion}
+
+
+
+\clearpage
+%% Print the bibibliography and add the section to the table of content
+\printbibliography[heading=bibintoc]
+
+\end{document}
