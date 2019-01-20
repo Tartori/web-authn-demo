@@ -466,3 +466,5 @@ buildNumber.properties
 # End of https://www.gitignore.io/api/java,latex,maven,eclipse,intellij,visualstudiocode
 
 *.DS_Store
+doc/paper/*temp*
+doc/presentation/*temp*
