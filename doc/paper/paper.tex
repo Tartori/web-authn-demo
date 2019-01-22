@@ -20,17 +20,29 @@
 
 \section{Introduction}
 
-FIDO2 is a specification that aims to increase security for end users by eliminating the weaknesses that come with passwords. The main advantages are strong privacy, privacy protection, multiple choices, cost-efficiency and a layered approach. \cite{yubico:whatIsFido2} 
+Passwords are the most common used way to authenticate a user. They are easy to implement and have been used since the beginning of the internet. People are used to passwords and use them everywhere, but most of them use weak ones. Remembering strong passwords is not easy, thus, most opt for easier passwords or password reuse them. The newest recommendations from the NIST are actually to use very long passwords that make sense for a human. For isntance a sentence in a fictional language or with slang words. An appropriate password would then look something like `awsumfurrycybercat', but not that. \cite{nist:pw:blog}
 
-The main force behind FIDO2 is the FIDO Alliance. Some members are Microsoft, Google and Yubico. Microsoft for instance wants to use FIDO2 for the windows hello login. \cite{yubico:ms} With that force behind it it has been adopted in all major web browser. \cite{fido:browser} There are also authenticators available from yubico. \cite{yubico:yubikey5}
+Even when user use strong passwords with this it is hard to remember a new password for every site. Thus, they will reuse passwords for multiple sites. Password reuse can lead to dangerous password credential stuffing attacks where the password that was leaked from one service can be used to access another service. \cite{panda:pwreuse, xkcd:pwreuse} Those are two weaknesses that passwords always had. Firstly, used passwords are generally too weak, secondly, they are reused for multiple services. 
+
+FIDO2 is a specification that aims to increase security for end users by eliminating the weaknesses that come with passwords. The main advantages are strong privacy, privacy protection, multiple choices, cost-efficiency and a layered approach. It tries to do that by using secure authenticators that are used instead of a password. \cite{yubico:whatIsFido2} 
+
+The main force behind FIDO2 is the FIDO Alliance. Some noticable members are Microsoft, Google and Yubico. Microsoft for instance wants to use FIDO2 for the windows hello login. \cite{yubico:ms} With that force behind it it has been adopted in all major web browser. \cite{fido:browser} There are also already authenticators available from yubico that can be used. \cite{yubico:yubikey5}
 
 This paper discusses the implementation for the replying party when the user already has a fido2 authenticator.
 
 \section{FIDO2}
 
-FIDO2 is an authentication standart wich uses public key cryptography to authenticate an user. Compared to a password the user doesn't prove that he knows something but that he has something that he previously has registered with the application. This authenticator is an external device that interacts with the application through a protocol called CTAP. CTAP is also part of the FIDO2 specification but this paper does not go into detail of how this works. \cite{ctap}
+FIDO2 is an authentication standart wich uses public key cryptography to authenticate an user. Compared to a password the user doesn't prove that he knows something but that he has something that he previously has registered with the application. This authenticator is an external device that interacts with the application through a protocol called CTAP. CTAP is also part of the FIDO2 specification but this paper does not go into detail of how this protocol works. \cite{ctap}
 
 The WebAuthn specification forms the second part of FIDO2. This part deals with the Application that wants to authenticate an user. It contains two steps. Attestation which deals with registering a new user and assertion which handles the authentication of an existing user. Both functions are explained in the Section \ref{sec:replying_party}.
+
+\subsection{Main Ideas}
+
+Traditionally, when a user wants to register or authenticate, he supplies the application with a password. A shared secret that only the user is supposed to know. We already discussed how passwords usually lead to a weak authentication. This issue was usually solved by adding a second factor to the authentication. With FIDO U2F this second factor would be very strong and the authentication would be resilient against big attacks. However, many sites offer weaker forms of second factor authentication like codes via e-mail or phone. Both of those methods are weak to message interception where an attacker intercepts the message before the end user recieves it. \cite{smsweak}
+
+By using certified authenticators, FIDO2 makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticator for a large group of people. Additionally once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Additionally to secure authenticators that are simply left in the USB slot of a machine, FIDO2 requires the user to be present during the authentication. With this an attacker can't simply put some malware on the users computer and trigger the login. 
+
+
 
 \subsection{Authenticator}
 
@@ -39,7 +51,6 @@ The WebAuthn specification forms the second part of FIDO2. This part deals with 
 \subsubsection{Level 3}
 \subsubsection{Level 3+}
 
-\subsection{Principles}
 
 \subsection{FIDO2 vs FIDO U2F}
 
