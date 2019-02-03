@@ -55,8 +55,6 @@ public class LoginControler {
     @Autowired
     private CBORFactory cborFactory;
     @Autowired
-    private CertificateParser certificateParser;
-    @Autowired
     private BouncyCastleProvider bouncyCastleProvider;
 
     @PostMapping

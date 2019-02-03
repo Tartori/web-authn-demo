@@ -1,5 +1,28 @@
 # Journal
 
+## 2019.01.22 Project Meeting
+
+### Questions
+
+* presentation audience, length, depth, location, time?
+* paper: audience, length, template ok, deadline?
+
+Paper template is ok :)
+
+Yubikey5 fido1 u2f
+
+#### Paper
+
+Glossary / Acronyms
+
+#### Presentation
+
+Auftrag, Vorgehen, Ergebnisse, Fazit (für enduser / entwickler)
+
+offene Punkte, Einschränkungen
+
+Demo
+
 ## 2018.12.28
 
 ### Issues

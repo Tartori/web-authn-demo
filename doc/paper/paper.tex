@@ -4,6 +4,10 @@
 \usepackage{csquotes}
 
 \usepackage{kpfonts}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{pgf-umlsd}
+\usetikzlibrary{calc}
 \usepackage{polyglossia}
 \setdefaultlanguage{english}
 \usepackage[backend=biber, style=ieee]{biblatex}
@@ -42,8 +46,6 @@ Traditionally, when a user wants to register or authenticate, he supplies the ap
 
 By using certified authenticators, FIDO2 makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticator for a large group of people. Additionally once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Additionally to secure authenticators that are simply left in the USB slot of a machine, FIDO2 requires the user to be present during the authentication. With this an attacker can't simply put some malware on the users computer and trigger the login. 
 
-
-
 \subsection{Authenticator}
 
 \subsubsection{Level 1}
@@ -54,10 +56,46 @@ By using certified authenticators, FIDO2 makes sure that a user needs to have ac
 
 \subsection{FIDO2 vs FIDO U2F}
 
-\section{Replying Party}
+\section{Replying Party Reference Implementation}
 \label{sec:replying_party}
 
+The replying party is one of the main components of the FIDO2 standart and the main component of this paper. It includes a sample implementation of the replying party meant as a reference. This part will deal with the two phases attestation and authentication. First there is a short section dealing with the setup of the reference code.
+
+\subsection{Environment}
+
+The reference code is written in Java and uses Maven for dependency management. To get the REST API set up Spring Boot is used such that most of the non relevant code of setting up controllers etc could be spared. The data from the registrations are stored in a set to decrease the non-relevant code even more. There are some data classes that mostly represent data that is used within the application. 
+
+The frontend part is from the FIDO Alliance demo \cite{fido:demo}. Additionally some inspiration was taken from the Yubico implementation of the Java-Webauthn-Server also available on Github \cite{yubico:webauthn:server}. 
+
+For testing the YubiKey 5 was used \cite{yubico:yubikey5} which is reflected in the code. There are multiple ways with which the the standart can be implemented. Only the way to implement it with a yubikey 5 is available in the reference code. The other ways are discussed in their relative paragraphs.
+
+The relevant classes are the LoginController, the RegistrationController and the AuthenticatorDataParser. Those are nice references for when one wants to implement the replying party oneself. Those classes are displayed in depth in the following sections.
+
 \subsection{Registration / Attestation}
+
+The registration which is reflected in the RegistrationController represents the process a user has to go through to register with the application using a FIDO2 capable token. It consists of two main steps. First the replying party has to create a JSON that will be accepted by the token in the CTAP protocol as a valid challenge. After the response from the client the response endpoint need to validate the input from the authenticator. This can be seen in Figure \ref{fig:user_registration}
+
+\begin{figure}
+  \centering
+  \begin{sequencediagram}
+    \newthread{U}{User}{}
+    \newinst[1]{T}{Token}{}
+    \newinst[2.5]{B}{Browser}{}
+    \newinst[3]{R}{Replying Party}{}
+    \begin{call}{U}{Register}{B}{}
+      \begin{call} {B}{/create(user)}{R}{makeCredentialJson}
+      \end{call} 
+      \begin{call} {B}{navigator.create}{T}{createResponse}
+        \begin{call}{T}{activate}{U}{activation}
+        \end{call}
+      \end{call} 
+      \begin{call} {B}{/response(createResponse)}{R}{username}
+      \end{call} 
+    \end{call}
+  \end{sequencediagram}
+  \caption{User Registration}
+  \label{fig:user_registration}
+\end{figure}
 
 \subsubsection{Create registration}
 
