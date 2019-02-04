@@ -201,6 +201,30 @@ Overall there are a lot of steps needed for a successful ceremony. None of the s
 
 \subsection{Login / Authentication}
 
+The authentication which is implemented in the LoginController deals with the process of authenticating to a replying party by using an authenticator that has previously been registered. There are again two main stages. The replying party again has to first create a \gls{json} which contains a challenge. This challenge is responded by the authenticator and in a second step the replying party has to verify that response by checking against the authenticator data that were registered before. The process is depicted in Figure \ref{fig:user_authentication}.
+
+\begin{figure}
+  \centering
+  \begin{sequencediagram}
+    \newthread{U}{User}{}
+    \newinst[1]{T}{Token}{}
+    \newinst[2.5]{B}{Browser}{}
+    \newinst[3]{R}{Replying Party}{}
+    \begin{call}{U}{Login}{B}{}
+      \begin{call} {B}{/create(user)}{R}{createAuthenticationJson}
+      \end{call} 
+      \begin{call} {B}{navigator.get}{T}{authnResponse}
+        \begin{call}{T}{activate}{U}{activation}
+        \end{call}
+      \end{call} 
+      \begin{call} {B}{/response(authnResponse)}{R}{username}
+      \end{call} 
+    \end{call}
+  \end{sequencediagram}
+  \caption{User Authentication}
+  \label{fig:user_authentication}
+\end{figure}
+
 
 
 \subsubsection{Create registration}

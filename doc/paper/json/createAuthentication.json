@@ -1,0 +1,17 @@
+{
+  "challenge": "-JZjhVjqfowCESo0b4brtN4U82KqNJlQi6tICjSA9eA",
+  "rpId": "dev.webauthn.demo",
+  "allowCredentials": [
+    {
+      "type": "public-key",
+      "id": "e_I8atSmcqMHr8b0D4UA8p0MoOXiOoEgL02E9yjmpoFg5l9xJNc8DIxsnrZwELUi-eKpcAH3wJkC2DQT5pPrpg"
+    }
+  ],
+  "extensions": {
+    "appId": "https://dev.webauthn.demo"
+  },
+  "userVerification": "preferred",
+  "timeout": 60000,
+  "errorMessage": "",
+  "status": "ok"
+}
