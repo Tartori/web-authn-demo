@@ -3,12 +3,14 @@
 
 \usepackage{csquotes}
 \usepackage{kpfonts}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 
 % Code Segments
 \usepackage{listings}
 \input{json-highlighting.tex}
 
+% Images
+\usepackage{graphicx}
 
 % Sequence Diagram
 \usepackage{geometry}
@@ -26,7 +28,7 @@
 \addbibresource{paper.bib}
 \usepackage{graphicx}
 \begin{document}
-\title{Web Authn Implementation}
+\title{Web Authn Reference Implementation}
 \date{\today} 
 \author{ Julian Stampfli (\texttt{julianjimmy.stampfli@students.bfh.ch}) }
 \maketitle
@@ -59,14 +61,48 @@ Traditionally, when a user wants to register or authenticate, he supplies the ap
 By using certified authenticators, \gls{fido2} makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticator for a large group of people. Additionally once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Additionally to secure authenticators that are simply left in the USB slot of a machine, \gls{fido2} requires the user to be present during the authentication. With this an attacker can't simply put some malware on the users computer and trigger the login. 
 
 \subsection{Authenticator}
+\gls{fido2} authenticators are certified devices that support the \gls{fido2} standart. They must at least fulfill level 1 of the certification levels. There are 3 levels that can be achieved that all build on each other plus one for additional security. The levels are described below. New authenticators need to first get a functional certificate to profe that they are interoperable with other clients and servers.
+
+The authenticator used in this reference implementation is a Yubikey 5 which supports an interface for FIDO2 via \gls{usb} and via \gls{nfc}. In this paper only the \gls{usb} interface will be used.
 
 \subsubsection{Level 1}
-\subsubsection{Level 2}
-\subsubsection{Level 3}
-\subsubsection{Level 3+}
+Level 1 is the basic level. It offers protection against basic, at-scale attacks. \cite{fido:authenticator:level1}
 
+This level can range from an authenticator running in a \gls{hlos} without effective protection against most other applications to an authenticator being implemented completely in an \gls{aroe}. Most authenticators that are used should belong to a security level above 1 to ensure the security of the authenticator and the authentication. \cite{fido:authenticator:level1}
+
+\subsubsection{Level 2}
+Level 2 protects against basic, scalable attacks. \cite{fido:authenticator:level2}
+
+This level needs an authenticator to run in a \gls{fido} \gls{aroe} and needs to support allowed cryptography lists. Examples that would not achieve this level are: \cite{fido:authenticator:level2, fido:authenticator:allowedEnvironment}
+\begin{enumerate}
+  \item Authenticator that doesn't support attestation
+  \item Authenticator that is an implementation without restricted operating environment 
+\end{enumerate}
+
+\subsubsection{Level 3}
+Level 3 protects against enhanced-basic effort software and hardware attacks. The fido alliance provides some examples that would pass level 3. \cite{fido:authenticator:level3}
+
+Some simplified examples are:
+\begin{enumerate}
+  \item Authenticator that can't be easily opened implemented on a CPU with RAM encryption and integrity check.
+\end{enumerate}
+
+\subsubsection{Level 3+}
+Level 3+ protects against moderate or high effort software or hardware attacks. Thus an attacker should be hindered from performing attacks on a chip level. \cite{fido:authenticator:level3_plus}
 
 \subsection{FIDO2 vs FIDO U2F}
+
+\gls{fido} \gls{u2f} is the predecessor of \gls{fido2}. Where \gls{fido2} covers more usecases than \gls{fido} \gls{u2f}. The latter is only for second factor authentication. \gls{fido2} can be used as a second factor but also for passwordless authentication and local multifactor authentication. \cite{yubico:whatIsFido2}
+
+It is possible to use a \gls{fido} \gls{u2f} token to authenticate with a \gls{fido2} replying party and it is also possible to use a \gls{fido2} authenticator with a \gls{fido} \gls{u2f} implementation. This mapping is mainly done in the \gls{ctap} version 1 for \gls{fido} \gls{u2f} and version 2 for \gls{fido2}. In the \gls{fido2} version there is a mapping defined which can map a response of a \gls{fido} \gls{u2f} authenticator to a response of a \gls{fido2} authenticator. This mapping for the authentication can be seen in Figure \ref{fig:authenticationMapping}. The full description is available in the \gls{ctap} specification. \cite{yubico:whatIsFido2, ctap:interoperability}
+
+\begin{figure}[ht]
+  \includegraphics[width=12cm]{img/u2fcompat-getassertion.png}
+  \centering
+  \caption{Authenticator Data}
+  \label{fig:authenticationMapping}
+\end{figure}
+
 
 \section{Replying Party Reference Implementation}
 \label{sec:replying_party}
@@ -149,10 +185,10 @@ Step 3 is trivial but important. The type of the parsed client data must be `web
 In step 4 we need to verify the challenge. In the code this is done by searching for the user with this challenge. If none is present or the user is already registered an error code is returned.
 
 \paragraph{Step5}\hfill \\ 
-Step 5 is trivial. The origin that is returned must match the origin of the replying party. For convenience in the code just the presence of the origin is checked. It is important that in a productive environment this doesn't suffice. This string needs to match the URL where it was called.
+Step 5 is trivial. The origin that is returned must match the origin of the replying party. For convenience in the code just the presence of the origin is checked. It is important that in a productive environment this doesn't suffice. This string needs to match the URL where it was called. This check offers protection against \gls{mitm} attacks.
 
 \paragraph{Step6}\hfill \\ 
-Step 6 is currently not covered by this documentation. It is not mandatory to check step 6.
+Step 6 is currently not covered by this documentation. It deals with token binding over the TLS connection.
 
 \paragraph{Step7}\hfill \\ 
 In step 7 the \gls{sha-256} hash for the signature is precomputed. It is important that the string value of the json property `clientDataJSON' is compared, else the signature will be incorrect.
@@ -165,7 +201,7 @@ Those two steps were split in the code such that the `attestationData' is availa
 \lstinputlisting[language=json, caption=Attestation Data Parsed, label=lst:attestationData]{json/attestationData.json}
 
 \paragraph{Step9}\hfill \\ 
-In step 9 the `rpIdHash' from the decoded auth data is compared to the \gls{sha-256} hash of the rp.id from the Listing \ref{lst:createRegistration}. This is used to verify again that the token has registered with the correct replying party. Even though this was tested already it should be checked again to protect against some forms of attack. 
+In step 9 the `rpIdHash' from the decoded auth data is compared to the \gls{sha-256} hash of the rp.id from the Listing \ref{lst:createRegistration}. This is used to verify again that the token has registered with the correct replying party. Even though this was tested already it should be checked again to protect against some forms of attack like \gls{mitm}. 
 
 \paragraph{Step10}\hfill \\ 
 In step 10 the user present flag has to be verified. This is one of the main features of \gls{fido2} as it ensures that an user was present when the attestation was created. However, this doesn't prove that the user was the user that he claims to be, but simply that he is a user. This limits many kinds of remote attacks as they can't trigger the authenticator to set this flag to true. Physical attacks are still possible though.
@@ -308,11 +344,39 @@ After already knowing what happens in the registration the authentication is ver
 
 \subsection{Auth Data}
 \label{sec:authData}
+In both the registration and authentication ceremony there is one step where the authenticator data must be parsed. Thus this was done at a central place called the `AuthenticatorDataParser'. This data comes in binary and needs to be parsed according to the specification. The first 32 bytes generate the rpIdHash, the next byte the flags sector. Then there are 4 bytes which represent the signature Counter. After that there might exist some attestedCredentialData. A table with all the information can be seen in Figure \ref{fig:authenticatorData}.
+
+This attestedCredentialData if present contains 16 bytes of the aaguid, with which the authenticator model can be determinded, 2 bytes which set the lenght of the following field which is the credential id and the rest which makes the credential Public Key. This attestedCredentialData is present for registration to verify the assertion. A table with all the information can be seen in Figure \ref{fig:credentialData}.
+
+
+\begin{figure}[ht]
+  \includegraphics[width=12cm]{img/authenticatorResponseData.png}
+  \centering
+  \caption{Authenticator Data}
+  \label{fig:authenticatorData}
+\end{figure}
+
+\begin{figure}[ht]
+  \includegraphics[width=12cm]{img/authenticatorData.png}
+  \centering
+  \caption{Attested Credential Data}
+  \label{fig:credentialData}
+\end{figure}
+
 
 
 \section{Conclusion}
+The \gls{fido2} standart increases the security of the end user by eliminating passwords with a \gls{mitm} resistant factor. The authenticator can be supplied by many parties which makes wide adoption easier. However, currently the implementation of the standart for a webpage owner is probably to complex. There are not yet any libraries for all the languages available. This needs to change if wide adoption should be achieved. Additionally, there are not yet a lot of \gls{fido2} authenticators available on the market. Which results in a poor adoption rate. 
 
-\section{Further Research}
+However, the standart is quite new and could be adopted widely. It has a strong support from Microsoft, where it is implemented in Windows Hello. This could result in many companies supplying authenticators to their employees which would lead to a higher incentive to provide web applications with \gls{fido2} support. It is important that other big players implement the standart so that it truly can replace passwords.
+
+An interesting application of this would be within companies to replace the need for passwords. Also it could be used by governments in combination with an \gls{eid} to give access to certain resources by using a phyiscal card as an authenticator. This way every citizen of a country already has access to a \gls{fido} certified authenticator which would lead to country specific sites implementing the standart as an authentication method. 
+
+\subsection{Further Research}
+
+This implementation only covered the yubikey 5 authenticator. It would be interesting to see how other authenticators react. Also it would be interesting to see how the yubikey 5 interacts via the \gls{nfc} interface. This implementation was only tested using the \gls{usb} interface of the authenticator. 
+
+Additionally to that it only dealt with authentication and registration. It is important to give the user the option to add multiple authenticators to his account such that he can recover his account should he loose his key. Additionally it is important that the user can revoke their authenticators. This should be done by giving the user the option to set a name that is relevant to him for each authenticator. He should then be able to manage those authenticators. Either adding new ones or removing existing ones. 
 
 \clearpage
 
