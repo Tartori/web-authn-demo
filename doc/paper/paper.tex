@@ -115,29 +115,30 @@ The create registration step consists of creating a \gls{json} response that the
 
 A valid \gls{json} representation of this response can be seen in Listing \ref{lst:createRegistration}. A description to the important entries follows:
 
+\lstinputlisting[language=json, caption=Registration JSON, label=lst:createRegistration]{json/createRegistration.json}
+
 \begin{description}
-  \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call.
+  \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call and base 64 encoded.
   \item[fidoResponse] Should be direct. 
-  \item[rp] \hfill \\ Must reflect the domain over which you communicate
+  \item[rp.id] \hfill \\ Must reflect the domain over which you communicate
   \item[user.id] Must be unique and random. 
   \item[pubKeyCredParams.type] Should be public-key. 
-  \item[pubKeyCredParams.alg] Must be a valid \gls{cose} key. \cite{cose}
+  \item[pubKeyCredParams.alg] Must be a valid \gls{cose} algorithm. \cite{cose}
   \item[attestation] Should be direct.
   \item[timeout] Should be defined.   
 \end{description}
 
-\lstinputlisting[language=json, caption=Registration JSON, label=lst:createRegistration]{json/createRegistration.json}
 
 \subsubsection{Verify registration}
 
-To verify the response of an authenticator the specification provided 19 steps. The implementation closely followed those steps by creating a method for each. If something went wrong it will throw an exception and return with an error code. The following paragraphs will provide some further documentation and challanges that were faced while implementing the reference. The initial response can be seen in Figure \ref{lst:create_response}.
+To verify the response of an authenticator the specification provided 19 steps. The implementation closely followed those steps by creating a method for each. If something went wrong it will throw an exception and return with an error code. The following paragraphs will provide some further documentation and challenges that were faced while implementing the reference. The initial response can be seen in Figure \ref{lst:create_response}.
 
 \lstinputlisting[language=json, caption=Create Response JSON, label=lst:create_response]{json/createResponse.json}
 
 \paragraph{Step1} \hfill \\ 
 In Java with spring boot step 1 is mostly not needed. But checking that the needed fields in the json are present has to be done at some point.
 \paragraph{Step2} \hfill \\ 
-In step 2 the clientDataJSON field has to be parsed. This is done by base 64 url decoding the clientDataJSON field and then representing the data as an utf-8 string which can be parsed into \gls{json}. Parsed it looks like in Listing \ref{lst:clientDataParsed}
+In step 2 the clientDataJSON field has to be parsed. This is done by base 64 url decoding the clientDataJSON field and then representing the data as an \gls{utf-8} string which can be parsed into \gls{json}. Parsed it looks like in Listing \ref{lst:clientDataParsed}
 
 \lstinputlisting[language=json, caption=Client Data JSON Parsed, label=lst:clientDataParsed]{json/clientDataParsed.json}
 
@@ -154,7 +155,7 @@ Step 5 is trivial. The origin that is returned must match the origin of the repl
 Step 6 is currently not covered by this documentation. It is not mandatory to check step 6.
 
 \paragraph{Step7}\hfill \\ 
-In step 7 the \gls{sha}-256 hash for the signature is precomputed. It is important that the string value of the json property `clientDataJSON' is compared, else the signature will be incorrect.
+In step 7 the \gls{sha-256} hash for the signature is precomputed. It is important that the string value of the json property `clientDataJSON' is compared, else the signature will be incorrect.
 
 \paragraph{Step8}\hfill \\ 
 Step 8 is a lot of work. First the `attestationObject' from the `response' has to be base64 url decoded and then parsed into \gls{json} using a \gls{cbor} mapper. The result of this is shown in Listing \ref{lst:attestationData}. After that the `authData' field of the attestation data needs to be parsed. It is encoded in a specified format. The decoding of this is described in Section \ref{sec:authData}. \cite{webauthn:authData}
@@ -164,7 +165,7 @@ Those two steps were split in the code such that the `attestationData' is availa
 \lstinputlisting[language=json, caption=Attestation Data Parsed, label=lst:attestationData]{json/attestationData.json}
 
 \paragraph{Step9}\hfill \\ 
-In step 9 the `rpIdHash' from the decoded auth data is compared to the \gls{sha}-256 hash of the rp.id from the Listing \ref{lst:createRegistration}. This is used to verify again that the token has registered with the correct replying party. Even though this was tested already it should be checked again to protect against some forms of attack. 
+In step 9 the `rpIdHash' from the decoded auth data is compared to the \gls{sha-256} hash of the rp.id from the Listing \ref{lst:createRegistration}. This is used to verify again that the token has registered with the correct replying party. Even though this was tested already it should be checked again to protect against some forms of attack. 
 
 \paragraph{Step10}\hfill \\ 
 In step 10 the user present flag has to be verified. This is one of the main features of \gls{fido2} as it ensures that an user was present when the attestation was created. However, this doesn't prove that the user was the user that he claims to be, but simply that he is a user. This limits many kinds of remote attacks as they can't trigger the authenticator to set this flag to true. Physical attacks are still possible though.
@@ -225,45 +226,85 @@ The authentication which is implemented in the LoginController deals with the pr
   \label{fig:user_authentication}
 \end{figure}
 
+\subsubsection{Create authentication}
 
+Simmilar to the create registration section discussed above the create authentication step creates a \gls{json} which is used to send to the authenticator. A valid \gls{json} is shown in \ref{lst:createAuthentication}
 
-\subsubsection{Create registration}
+\lstinputlisting[language=json, caption=Create Authentication JSON, label=lst:createAuthentication]{json/createAuthentication.json}
 
-\subsubsection{Verify registration}
+\begin{description}
+  \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call and base 64 encoded.
+  \item[fidoResponse] Should be direct. 
+  \item[rpid] \hfill \\ Must reflect the domain over which you communicate
+  \item[allowCredentials.type] Should be public-key. 
+  \item[allowCredentials.id] Should be the id the user used when registering.
+  \item[timeout] Should be defined.   
+\end{description}
+
+\subsubsection{Verify Authentication Assertion}
+
+To verify an authentication assertion the standart again supplies a set of steps. This time there are 18. Some steps are not represented directly in the implementation. This is mostly because they can't be represented directly. Additionally before the first step some serialization has to be done. The initial response is visible in Listing \ref{lst:attestationResponse}.
+
+\lstinputlisting[language=json, caption=Attestation Response JSON, label=lst:attestationResponse]{json/attestationResponse.json}
 
 \paragraph{Step1}\hfill \\ 
-asd
+In the first step the credential should be matched to the credentials requested. This is done by first getting the user by the used credential. Then the stored assertion request for this user is compared against the credential id given with the assertion.
+
 \paragraph{Step2}\hfill \\ 
-asd
+The user has already been retrieved in step 1. In step 2 the userhandle should be verified. The userhandle is optional but if it is present it must reflect the user that was challenged.
+
 \paragraph{Step3}\hfill \\ 
-asd
+In step 3 the public key must be retrieved. This is stored with the user.
+
 \paragraph{Step4}\hfill \\ 
-asd
+Step 4 deals with parsing of several fields. 
+
 \paragraph{Step5}\hfill \\ 
-asd
+Step 5 requires an \gls{utf-8} decoding of the cData.
+
 \paragraph{Step6}\hfill \\ 
-asd
+Step 6 requires a \gls{json} parsing of the decoded cData. Step 5 and 6 are to close together that the reference implementation combined them into one step which deals with both at the same time. The final clientDataJSON can is displayed in Listing \ref{lst:attestationClientData}.
+
+\lstinputlisting[language=json, caption=Attestation Client Data JSON, label=lst:attestationClientData]{json/attestationClientData.json}
+
 \paragraph{Step7}\hfill \\ 
-asd
+In step 7 the type of the client data must be set to `webauthn.get'.
+
 \paragraph{Step8}\hfill \\ 
-asd
+In step 8 the challenge has to be verified to be sure that the correct challenge was responded.
+
 \paragraph{Step9}\hfill \\ 
-asd
+In step 9 the origin has to be verified. Again as in the registration process this is done by checking if the origin contains the domain. In a productive environment this should be done by comparing the expected uri.
+
 \paragraph{Step10}\hfill \\ 
-asd
+Step 10 deals with token binding which is optional and currently not supported in the reference implementation.
+
 \paragraph{Step11}\hfill \\ 
-asd
+In step 11 the rpIdHash from the authData must equal to the \gls{sha-256} hash of the RP ID. For this first the authData needs to be parsed. 
+
 \paragraph{Step12}\hfill \\ 
-asd
+In step 12 the user present flag is checked again. This is the same process as in the registration and must be checked to protect against remote attacks.
+
 \paragraph{Step13}\hfill \\ 
-asd
+In step 13 the user verified flag is checked. This check is optional and requires an authenticator that supports it.
+
 \paragraph{Step14}\hfill \\ 
-asd
+In step 14 the extensions are checked. This check is optional and is currently not supported by the reference implementation.
+
 \paragraph{Step15}\hfill \\ 
-asd
+In step 15 the client data is hashed using \gls{sha-256}. This needs to be the exact string that was recieved by accessing the clientDataJSON field.
+
 \paragraph{Step16}\hfill \\ 
-asd
+For step 16 first the public key which is in the \gls{cose} format needs to be parsed. Then the binary representation of the auth data and the hash calculated in step 15 are concatenated which represents the signed data. Then the signature value parsed in step 4 can be checked against the signed data using the parsed public key. 
+
+\paragraph{Step17}\hfill \\ 
+Step 17 is needed to check for cloned authenticators. If the signCount is present it should always increase. It is important to verify this behavior to avoid cloned authenticators.
+
+\paragraph{Step18}\hfill \\ 
+Step 18 states that should any step above have been invalid, the authentication ceremony must be failed.
+
 \subsubsection{Summary}
+After already knowing what happens in the registration the authentication is very simmilar. Many steps exist in both ceremonies in the exact same or a very simmilar way. The steps of the assertion sometimes can't be represented exactly in code because with java it is sometimes easier to combine two steps into one. However, it is important that all of the steps are followed as required. Missing some steps could lead to a broken authentication.
 
 \subsection{Auth Data}
 \label{sec:authData}
@@ -271,7 +312,7 @@ asd
 
 \section{Conclusion}
 
-
+\section{Further Research}
 
 \clearpage
 

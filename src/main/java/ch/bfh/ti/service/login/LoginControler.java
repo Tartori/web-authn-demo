@@ -6,7 +6,6 @@ import ch.bfh.ti.repository.user.SensitiveUser;
 import ch.bfh.ti.repository.user.UserRepository;
 import ch.bfh.ti.service.register.RegistrationController;
 import ch.bfh.ti.utils.Base64StringGenerator;
-import ch.bfh.ti.utils.CertificateParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -26,9 +25,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.*;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping(LoginControler.RESOURCE)
@@ -39,6 +36,8 @@ public class LoginControler {
     private static final int COSE_ALG_ECDSA_W_SHA256 = -7;
     private static final boolean checkUserVerified=false;
     private static final boolean checkTokenBinding=false;
+
+    private Hashtable<String, JsonNode> assertions = new Hashtable<>();
 
     @Autowired
     private AuthenticatorDataParser authenticatorDataParser;
@@ -85,18 +84,17 @@ public class LoginControler {
                 .addObject()
                 .put("type", "public-key")
                 .put("id", sensitiveUser.getCredentialId());
-        node.putObject("extensions").put("appId", "https://"+sensitiveUser.getDomain());
-        node.put("userVerification", "preferred");
         node.put("timeout", 60*1000);
         node.put("errorMessage", "");
         node.put("status", "ok");
         userRepository.updateUser(sensitiveUser);
-        System.out.println("User registration verification sent: "+node.toString());
+        System.out.println("User login request sent: "+node.toString());
+        assertions.put(userName, node);
         return node;
     }
 
     @PostMapping(path = "/response")
-    public ObjectNode response(@RequestBody final JsonNode inputJson) throws IOException {
+    public ObjectNode response(@RequestBody final JsonNode inputJson) {
         SensitiveUser sensitiveUser;
         try {
             sensitiveUser = performLoginSteps(inputJson);
@@ -148,7 +146,12 @@ public class LoginControler {
             throw new LoginFailedException(1);
         }
         SensitiveUser user = optionalSensitiveUser.get();
-        if(!user.isRegistered()||user.getChallenge().isEmpty()){
+        if(!user.isRegistered()||user.getChallenge().isEmpty()||!assertions.containsKey(user.getUsername())){
+                throw new LoginFailedException(1);
+        }
+        JsonNode assertion = assertions.get(user.getUsername());
+        assertions.remove(user.getUsername());
+        if(!assertion.get("allowCredentials").get(0).get("id").asText().equals(inputJson.get("id").asText())){
             throw new LoginFailedException(1);
         }
         return user;

@@ -1,0 +1,12 @@
+{
+  "rawId": "NWIv8Cd3lXkE8r4_Ondf6fPDeYDEbuQSNWbRrDYmfweVCo...",
+  "response": {
+    "authenticatorData": "kn8Lq9EV0MBhHa_k-ZEtK8Ne4ZJ-06YC_t4YmMtA57gBAAAA7Q",
+    "signature": "MEUCIAhdPPqzV69p2dFEXNHjkafVkELuCP1RgXdJbdKoYLz4AiEAm...",
+    "userHandle": "",
+    "clientDataJSON": "eyJjaGFsbGVuZ2UiOiJjYnVCTTVHVEZ0RFBjVzRCcVh5c0tkeWQ2..."
+  },
+  "getClientExtensionResults": {},
+  "id": "NWIv8Cd3lXkE8r4_Ondf6fPDeYDEbuQSNWbRrDYmfweVCo...",
+  "type": "public-key"
+}
