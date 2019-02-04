@@ -1,5 +1,12 @@
 # Journal
 
+## 2019.02.04 Status
+
+* Glossary Done
+* Registration Section done
+* Authentication Section done
+* Introduction + FIDO2 done
+
 ## 2019.01.22 Project Meeting
 
 ### Questions

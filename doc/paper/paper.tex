@@ -58,7 +58,9 @@ The \gls{webAuthn} specification forms the second part of \gls{fido2}. This part
 
 Traditionally, when a user wants to register or authenticate, he supplies the application with a password. A shared secret that only the user is supposed to know. We already discussed how passwords usually lead to weak authentication. This issue is normally circumvented by adding a second factor to the authentication. With \gls{fido} \gls{u2f} this second factor would be robust, and the authentication would be resilient against scaled attacks. However, many sites offer weaker forms of second-factor authentication like codes via e-mail or SMS. Both of those methods are weak to message interception. \cite{smsweak}
 
-By using certified authenticators, \gls{fido2} makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this, an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticator for a large group of people. Additionally, once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Moreover, to secure authenticators that are left in the USB slot of a machine, \gls{fido2} requires the user to be present during the authentication. With this, an attacker can't merely put some malware on the user's computer and trigger the login. 
+In \gls{fido2} the Authenticator generally receives a challenge when it is accessed. This challenge comes from the replying party which wants to authenticate a user. With the challenge, the replying party sends the domain name where it is available. The authenticator can then check if that is truly the domain where the user is accessing the site. Should this be valid, the authenticator creates a response by signing the challenge and the host. The replying party can then during validation check whether the challenge and the domain contain the requested values and whether the signature is correct. With this, a \gls{mitm} attacker can't forward a challenge from a replying party to an authenticator by using a spoofed page. The user and the replying party can both be assured that they are talking to the correct party. To assure this \gls{tls} is mandatory for each session. \cite{yubico:whatIsFido2}
+
+By using certified authenticators, \gls{fido2} makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this, an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticators for a large group of people. Additionally, once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Moreover, by requiring the user to be present during the authentication authenticators that are left plugged into the machine are also secured. An attacker remotely triggers the authentication even if the authenticator is left in the machine for a long time. 
 
 \subsection{Authenticator}
 \gls{fido2} authenticators are certified devices that support the \gls{fido2} standard. They must at least fulfill level 1 of the certification levels. 3 levels can be achieved that all build on each other plus one for additional security. New authenticators need first to get a functional certificate to profe that they are interoperable with other clients and servers.
@@ -97,7 +99,7 @@ Level 3+ protects against moderate or high effort software or hardware attacks. 
 It is possible to use a \gls{fido} \gls{u2f} token to authenticate with a \gls{fido2} replying party and vice verca. This mapping is mainly done in the \gls{ctap} version 1 for \gls{fido} \gls{u2f} and version 2 for \gls{fido2}. In the \gls{fido2} version there is a mapping defined which can map a response of a \gls{fido} \gls{u2f} authenticator to a response of a \gls{fido2} authenticator. This mapping for the authentication can be seen in Figure \ref{fig:authenticationMapping}. The full description is available in the \gls{ctap} specification. \cite{yubico:whatIsFido2, ctap:interoperability}
 
 \begin{figure}[h]
-  \includegraphics[width=12cm]{img/u2fcompat-getassertion.png}
+  \includegraphics[width=16cm]{img/u2fcompat-getassertion.png}
   \centering
   \caption{Authenticator Data}
   \label{fig:authenticationMapping}
@@ -149,14 +151,14 @@ The registration which is reflected in the RegistrationController represents the
 
 \subsubsection{Create registration}
 
-The create registration step consists of creating a \gls{json} which represents a valid challenge. This JSON is sent to the browser where it is handed to the call `navigator.create()'. The response is sent to the /response endpoint in the replying party.
+The create registration step consists of creating a \gls{json} which represents a valid challenge. This \gls{json} is sent to the browser where it is handed to the call `navigator.create()'. The response is sent to the /response endpoint in the replying party.
 
 A valid \gls{json} representation of this response can be seen in Listing \ref{lst:createRegistration}. A description to the important entries follows:
 
-\lstinputlisting[language=json, caption=Registration JSON, label=lst:createRegistration]{json/createRegistration.json}
+\lstinputlisting[language=json, caption=Registration \gls{json}, label=lst:createRegistration]{json/createRegistration.json}
 
 \begin{description}
-  \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call and base 64 encoded.
+  \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call and \gls{base64} encoded.
   \item[fidoResponse] Should be direct. 
   \item[rp.id] \hfill \\ Must reflect the domain over which you communicate
   \item[user.id] Must be unique and random. 
@@ -171,7 +173,7 @@ A valid \gls{json} representation of this response can be seen in Listing \ref{l
 
 To verify the response of an authenticator the specification provided 19 steps. The implementation closely followed those steps by creating a method for each. If something went wrong it will throw an exception and return with an error code. The following paragraphs will provide some further documentation and challenges that were faced while implementing the reference. The initial response can be seen in Figure \ref{lst:create_response}.
 
-\lstinputlisting[language=json, caption=Create Response JSON, label=lst:create_response]{json/createResponse.json}
+\lstinputlisting[language=json, caption=Create Response \gls{json}, label=lst:create_response]{json/createResponse.json}
 
 \paragraph{Step1} \hfill \\ 
 In Java with Spring Boot, the first step is mostly not needed. But the check that the needed fields in the \gls{json} are present can be done at this point.
@@ -179,7 +181,7 @@ In Java with Spring Boot, the first step is mostly not needed. But the check tha
 \paragraph{Step2} \hfill \\ 
 In step 2 the clientDataJSON field has to be parsed. This is done by \gls{base64} URL decoding the clientDataJSON field and then representing the data as an \gls{utf-8} string which can be parsed into \gls{json}. Parsed it looks like in Listing \ref{lst:clientDataParsed}
 
-\lstinputlisting[language=json, caption=Client Data JSON Parsed, label=lst:clientDataParsed]{json/clientDataParsed.json}
+\lstinputlisting[language=json, caption=Client Data \gls{json} Parsed, label=lst:clientDataParsed]{json/clientDataParsed.json}
 
 \paragraph{Step3}\hfill \\ 
 Step 3 is trivial but important. The type of the parsed client data must be `webauthn.create'
@@ -269,7 +271,7 @@ The authentication is implemented in the LoginController. It deals with the proc
 
 Simmilar to the create registration section discussed above the create authentication step creates a \gls{json} which is used to send to the authenticator. A valid \gls{json} is shown in \ref{lst:createAuthentication}
 
-\lstinputlisting[language=json, caption=Create Authentication JSON, label=lst:createAuthentication]{json/createAuthentication.json}
+\lstinputlisting[language=json, caption=Create Authentication \gls{json}, label=lst:createAuthentication]{json/createAuthentication.json}
 
 \begin{description}
   \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call and \gls{base64} encoded.
@@ -284,7 +286,7 @@ Simmilar to the create registration section discussed above the create authentic
 
 The standard supplies a set of 18 steps to verify an authentication assertion. Should a step fail, a LoginFailedException is thrown which results in an error code in return. Before the first step, some serialization has to be done. The initial response is visible in Listing \ref{lst:attestationResponse}.
 
-\lstinputlisting[language=json, caption=Attestation Response JSON, label=lst:attestationResponse]{json/attestationResponse.json}
+\lstinputlisting[language=json, caption=Attestation Response \gls{json}, label=lst:attestationResponse]{json/attestationResponse.json}
 
 \paragraph{Step1}\hfill \\ 
 In the first step, the credential should be matched to the credentials requested. This match is done by first getting the user with the credential. Then the stored assertion request for this user is compared against the credential id given with the assertion.
@@ -304,7 +306,7 @@ Step 5 requires an \gls{utf-8} decoding of the cData.
 \paragraph{Step6}\hfill \\ 
 Step 6 requires a \gls{json} parsing of the decoded `cData'. Step 5 and 6 are to close together that the reference implementation combined them into one step which deals with both at the same time. The final clientDataJSON can is displayed in Listing \ref{lst:attestationClientData}.
 
-\lstinputlisting[language=json, caption=Attestation Client Data JSON, label=lst:attestationClientData]{json/attestationClientData.json}
+\lstinputlisting[language=json, caption=Attestation Client Data \gls{json}, label=lst:attestationClientData]{json/attestationClientData.json}
 
 \paragraph{Step7}\hfill \\ 
 In step 7 the type of the client data must be set to `webauthn.get'.
@@ -353,14 +355,14 @@ The attestedCredentialData if present contains 16 bytes of the `aaguid', with wh
 
 
 \begin{figure}[ht]
-  \includegraphics[width=12cm]{img/authenticatorResponseData.png}
+  \includegraphics[width=16cm]{img/authenticatorResponseData.png}
   \centering
   \caption{Authenticator Data}
   \label{fig:authenticatorData}
 \end{figure}
 
 \begin{figure}[ht]
-  \includegraphics[width=12cm]{img/authenticatorData.png}
+  \includegraphics[width=16cm]{img/authenticatorData.png}
   \centering
   \caption{Attested Credential Data}
   \label{fig:credentialData}
