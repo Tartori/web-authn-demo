@@ -1,0 +1,11 @@
+{
+  "fmt": "packed",
+  "attStmt": {
+    "alg": -7,
+    "sig": "MEQCIBRsm+gm5tY75S/uEkDb91bzq1LoDqSDyCw...",
+    "x5c": [
+      "MIICvDCCAaSgAwIBAgIEA63wEjANBgkqhkiG9w0BAQ..."
+    ]
+  },
+  "authData": "kn8Lq9EV0MBhHa/k+ZEtK8Ne4ZJ+06YC/..."
+}

@@ -2,12 +2,24 @@
 \documentclass[a4paper, 11pt]{scrartcl}
 
 \usepackage{csquotes}
-
 \usepackage{kpfonts}
-\usepackage{geometry}
 \usepackage{hyperref}
+
+% Code Segments
+\usepackage{listings}
+\input{json-highlighting.tex}
+
+
+% Sequence Diagram
+\usepackage{geometry}
 \usepackage{pgf-umlsd}
 \usetikzlibrary{calc}
+
+% Glossary
+\usepackage{glossaries}
+\makeglossaries
+\input{glossary.tex}
+
 \usepackage{polyglossia}
 \setdefaultlanguage{english}
 \usepackage[backend=biber, style=ieee]{biblatex}
@@ -24,27 +36,27 @@
 
 \section{Introduction}
 
-Passwords are the most common used way to authenticate a user. They are easy to implement and have been used since the beginning of the internet. People are used to passwords and use them everywhere, but most of them use weak ones. Remembering strong passwords is not easy, thus, most opt for easier passwords or password reuse them. The newest recommendations from the NIST are actually to use very long passwords that make sense for a human. For isntance a sentence in a fictional language or with slang words. An appropriate password would then look something like `awsumfurrycybercat', but not that. \cite{nist:pw:blog}
+Passwords are the most common used way to authenticate a user. They are easy to implement and have been used since the beginning of the internet. People are used to passwords and use them everywhere, but most of them use weak ones. Remembering strong passwords is not easy, thus, most opt for easier passwords or password reuse them. The newest recommendations from the \gls{nist} are actually to use very long passwords that make sense for a human. For instance a sentence in a fictional language or with slang words. An appropriate password would then look something like `awsumfurrycybercat', but not that. \cite{nist:pw:blog}
 
 Even when user use strong passwords with this it is hard to remember a new password for every site. Thus, they will reuse passwords for multiple sites. Password reuse can lead to dangerous password credential stuffing attacks where the password that was leaked from one service can be used to access another service. \cite{panda:pwreuse, xkcd:pwreuse} Those are two weaknesses that passwords always had. Firstly, used passwords are generally too weak, secondly, they are reused for multiple services. 
 
-FIDO2 is a specification that aims to increase security for end users by eliminating the weaknesses that come with passwords. The main advantages are strong privacy, privacy protection, multiple choices, cost-efficiency and a layered approach. It tries to do that by using secure authenticators that are used instead of a password. \cite{yubico:whatIsFido2} 
+\gls{fido2} is a specification that aims to increase security for end users by eliminating the weaknesses that come with passwords. The main advantages are strong privacy, privacy protection, multiple choices, cost-efficiency and a layered approach. It tries to do that by using secure authenticators that are used instead of a password. \cite{yubico:whatIsFido2} 
 
-The main force behind FIDO2 is the FIDO Alliance. Some noticable members are Microsoft, Google and Yubico. Microsoft for instance wants to use FIDO2 for the windows hello login. \cite{yubico:ms} With that force behind it it has been adopted in all major web browser. \cite{fido:browser} There are also already authenticators available from yubico that can be used. \cite{yubico:yubikey5}
+The main force behind \gls{fido2} is the \gls{fido} Alliance. Some noticable members are Microsoft, Google and Yubico. Microsoft for instance wants to use \gls{fido2} for the windows hello login. \cite{yubico:ms} With that force behind it it has been adopted in all major web browser. \cite{fido:browser} There are also already authenticators available from yubico that can be used. \cite{yubico:yubikey5}
 
-This paper discusses the implementation for the replying party when the user already has a fido2 authenticator.
+This paper discusses the implementation for the replying party when the user already has a \gls{fido2} authenticator.
 
 \section{FIDO2}
 
-FIDO2 is an authentication standart wich uses public key cryptography to authenticate an user. Compared to a password the user doesn't prove that he knows something but that he has something that he previously has registered with the application. This authenticator is an external device that interacts with the application through a protocol called CTAP. CTAP is also part of the FIDO2 specification but this paper does not go into detail of how this protocol works. \cite{ctap}
+\gls{fido2} is an authentication standart wich uses public key cryptography to authenticate an user. Compared to a password the user doesn't prove that he knows something but that he has something that he previously has registered with the application. This authenticator is an external device that interacts with the application through a protocol called \gls{ctap}. \gls{ctap} is also part of the \gls{fido2} specification but this paper does not go into detail of how this protocol works. \cite{ctap}
 
-The WebAuthn specification forms the second part of FIDO2. This part deals with the Application that wants to authenticate an user. It contains two steps. Attestation which deals with registering a new user and assertion which handles the authentication of an existing user. Both functions are explained in the Section \ref{sec:replying_party}.
+The \gls{webAuthn} specification forms the second part of \gls{fido2}. This part deals with the Application that wants to authenticate an user. It contains two steps. Attestation which deals with registering a new user and assertion which handles the authentication of an existing user. Both functions are explained in the Section \ref{sec:replying_party}.
 
 \subsection{Main Ideas}
 
-Traditionally, when a user wants to register or authenticate, he supplies the application with a password. A shared secret that only the user is supposed to know. We already discussed how passwords usually lead to a weak authentication. This issue was usually solved by adding a second factor to the authentication. With FIDO U2F this second factor would be very strong and the authentication would be resilient against big attacks. However, many sites offer weaker forms of second factor authentication like codes via e-mail or phone. Both of those methods are weak to message interception where an attacker intercepts the message before the end user recieves it. \cite{smsweak}
+Traditionally, when a user wants to register or authenticate, he supplies the application with a password. A shared secret that only the user is supposed to know. We already discussed how passwords usually lead to a weak authentication. This issue was usually solved by adding a second factor to the authentication. With \gls{fido} \gls{u2f} this second factor would be very strong and the authentication would be resilient against scaled attacks. However, many sites offer weaker forms of second factor authentication like codes via e-mail or phone. Both of those methods are weak to message interception where an attacker intercepts the message before the end user recieves it. \cite{smsweak}
 
-By using certified authenticators, FIDO2 makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticator for a large group of people. Additionally once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Additionally to secure authenticators that are simply left in the USB slot of a machine, FIDO2 requires the user to be present during the authentication. With this an attacker can't simply put some malware on the users computer and trigger the login. 
+By using certified authenticators, \gls{fido2} makes sure that a user needs to have access to his authenticator and be present when the authentication is triggered. With this an attacker could still steal the physical authenticator and authenticate with it. However, this kind of physical attack can't be used to steal the authenticator for a large group of people. Additionally once the user notices that his authenticator has been stolen, he can inform the service provider and disable this authenticator for future authentications. Additionally to secure authenticators that are simply left in the USB slot of a machine, \gls{fido2} requires the user to be present during the authentication. With this an attacker can't simply put some malware on the users computer and trigger the login. 
 
 \subsection{Authenticator}
 
@@ -59,13 +71,13 @@ By using certified authenticators, FIDO2 makes sure that a user needs to have ac
 \section{Replying Party Reference Implementation}
 \label{sec:replying_party}
 
-The replying party is one of the main components of the FIDO2 standart and the main component of this paper. It includes a sample implementation of the replying party meant as a reference. This part will deal with the two phases attestation and authentication. First there is a short section dealing with the setup of the reference code.
+The replying party is one of the main components of the \gls{fido2} standart and the main component of this paper. It includes a sample implementation of the replying party meant as a reference. This part will deal with the two phases attestation and authentication. First there is a short section dealing with the setup of the reference code.
 
 \subsection{Environment}
 
-The reference code is written in Java and uses Maven for dependency management. To get the REST API set up Spring Boot is used such that most of the non relevant code of setting up controllers etc could be spared. The data from the registrations are stored in a set to decrease the non-relevant code even more. There are some data classes that mostly represent data that is used within the application. 
+The reference code is written in Java and uses Maven for dependency management. To get the \gls{rest} \gls{api} set up Spring Boot is used such that most of the non relevant code of setting up controllers etc could be spared. The data from the registrations are stored in a set to decrease the non-relevant code even more. There are some data classes that mostly represent data that is used within the application. 
 
-The frontend part is from the FIDO Alliance demo \cite{fido:demo}. Additionally some inspiration was taken from the Yubico implementation of the Java-Webauthn-Server also available on Github \cite{yubico:webauthn:server}. 
+The frontend part is from the \gls{fido} Alliance demo \cite{fido:demo}. Additionally some inspiration was taken from the Yubico implementation of the Java-Webauthn-Server also available on Github \cite{yubico:webauthn:server}. 
 
 For testing the YubiKey 5 was used \cite{yubico:yubikey5} which is reflected in the code. There are multiple ways with which the the standart can be implemented. Only the way to implement it with a yubikey 5 is available in the reference code. The other ways are discussed in their relative paragraphs.
 
@@ -73,7 +85,7 @@ The relevant classes are the LoginController, the RegistrationController and the
 
 \subsection{Registration / Attestation}
 
-The registration which is reflected in the RegistrationController represents the process a user has to go through to register with the application using a FIDO2 capable token. It consists of two main steps. First the replying party has to create a JSON that will be accepted by the token in the CTAP protocol as a valid challenge. After the response from the client the response endpoint need to validate the input from the authenticator. This can be seen in Figure \ref{fig:user_registration}
+The registration which is reflected in the RegistrationController represents the process a user has to go through to register with the application using a \gls{fido2} authenticator. It consists of two main steps. First the replying party has to create a \gls{json} that will be accepted by the token in the \gls{ctap} protocol as a valid challenge. After the response from the client the response endpoint need to validate the input from the authenticator. This can be seen in Figure \ref{fig:user_registration}.
 
 \begin{figure}
   \centering
@@ -99,53 +111,138 @@ The registration which is reflected in the RegistrationController represents the
 
 \subsubsection{Create registration}
 
+The create registration step consists of creating a \gls{json} response that the autenticator can reply to. This JSON is sent to the browser where it calls `navigator.create()'. The respons is then sent to the /response endpoint in the replying party.
+
+A valid \gls{json} representation of this response can be seen in Listing \ref{lst:createRegistration}. A description to the important entries follows:
+
+\begin{description}
+  \item[challenge] \hfill \\ The challenge to be signed by the Authenticator. Must be unique for each call.
+  \item[fidoResponse] Should be direct. 
+  \item[rp] \hfill \\ Must reflect the domain over which you communicate
+  \item[user.id] Must be unique and random. 
+  \item[pubKeyCredParams.type] Should be public-key. 
+  \item[pubKeyCredParams.alg] Must be a valid \gls{cose} key. \cite{cose}
+  \item[attestation] Should be direct.
+  \item[timeout] Should be defined.   
+\end{description}
+
+\lstinputlisting[language=json, caption=Registration JSON, label=lst:createRegistration]{json/createRegistration.json}
+
 \subsubsection{Verify registration}
 
-\paragraph{Step1}
-\paragraph{Step2}
-\paragraph{Step3}
-\paragraph{Step4}
-\paragraph{Step5}
-\paragraph{Step6}
-\paragraph{Step7}
-\paragraph{Step8}
-\paragraph{Step9}
-\paragraph{Step10}
-\paragraph{Step11}
-\paragraph{Step12}
-\paragraph{Step13}
-\paragraph{Step14}
-\paragraph{Step15}
-\paragraph{Step16}
-\paragraph{Step17}
-\paragraph{Step18}
-\paragraph{Step19}
+To verify the response of an authenticator the specification provided 19 steps. The implementation closely followed those steps by creating a method for each. If something went wrong it will throw an exception and return with an error code. The following paragraphs will provide some further documentation and challanges that were faced while implementing the reference. The initial response can be seen in Figure \ref{lst:create_response}.
+
+\lstinputlisting[language=json, caption=Create Response JSON, label=lst:create_response]{json/createResponse.json}
+
+\paragraph{Step1} \hfill \\ 
+In Java with spring boot step 1 is mostly not needed. But checking that the needed fields in the json are present has to be done at some point.
+\paragraph{Step2} \hfill \\ 
+In step 2 the clientDataJSON field has to be parsed. This is done by base 64 url decoding the clientDataJSON field and then representing the data as an utf-8 string which can be parsed into \gls{json}. Parsed it looks like in Listing \ref{lst:clientDataParsed}
+
+\lstinputlisting[language=json, caption=Client Data JSON Parsed, label=lst:clientDataParsed]{json/clientDataParsed.json}
+
+\paragraph{Step3}\hfill \\ 
+Step 3 is trivial but important. The type of the parsed client data must be `webauthn.create'
+
+\paragraph{Step4}\hfill \\ 
+In step 4 we need to verify the challenge. In the code this is done by searching for the user with this challenge. If none is present or the user is already registered an error code is returned.
+
+\paragraph{Step5}\hfill \\ 
+Step 5 is trivial. The origin that is returned must match the origin of the replying party. For convenience in the code just the presence of the origin is checked. It is important that in a productive environment this doesn't suffice. This string needs to match the URL where it was called.
+
+\paragraph{Step6}\hfill \\ 
+Step 6 is currently not covered by this documentation. It is not mandatory to check step 6.
+
+\paragraph{Step7}\hfill \\ 
+In step 7 the \gls{sha}-256 hash for the signature is precomputed. It is important that the string value of the json property `clientDataJSON' is compared, else the signature will be incorrect.
+
+\paragraph{Step8}\hfill \\ 
+Step 8 is a lot of work. First the `attestationObject' from the `response' has to be base64 url decoded and then parsed into \gls{json} using a \gls{cbor} mapper. The result of this is shown in Listing \ref{lst:attestationData}. After that the `authData' field of the attestation data needs to be parsed. It is encoded in a specified format. The decoding of this is described in Section \ref{sec:authData}. \cite{webauthn:authData}
+
+Those two steps were split in the code such that the `attestationData' is available for future use.
+
+\lstinputlisting[language=json, caption=Attestation Data Parsed, label=lst:attestationData]{json/attestationData.json}
+
+\paragraph{Step9}\hfill \\ 
+In step 9 the `rpIdHash' from the decoded auth data is compared to the \gls{sha}-256 hash of the rp.id from the Listing \ref{lst:createRegistration}. This is used to verify again that the token has registered with the correct replying party. Even though this was tested already it should be checked again to protect against some forms of attack. 
+
+\paragraph{Step10}\hfill \\ 
+In step 10 the user present flag has to be verified. This is one of the main features of \gls{fido2} as it ensures that an user was present when the attestation was created. However, this doesn't prove that the user was the user that he claims to be, but simply that he is a user. This limits many kinds of remote attacks as they can't trigger the authenticator to set this flag to true. Physical attacks are still possible though.
+
+\paragraph{Step11}\hfill \\ 
+In step 11 the user verified flag is checked. This is optional and doesn't necessarily need to be checked. Only if the authenticator needs to support it. If this is required it is advisable to inform the user beforehand and if the bit is not set, he should get informed that he should use a different token.
+
+\paragraph{Step12}\hfill \\ 
+Step 12 deals with extensions. Currently this implementation does not support extensions.
+
+\paragraph{Step13}\hfill \\ 
+Step 13 verifies the `fmt' statement. As the implementation only validates yubikey5 authenticators, it is set to the value that is given back by those which is packed.
+
+\paragraph{Step14}\hfill \\ 
+In step 14 the signature is verified. For this there are multiple paths defined by the format. With the packed format there are multiple options of which yubikey 5 uses the x509 cert. This certificate first needs to be parsed. After it has been parsed some attributes must be checked. Only after those steps the signature is validated. This is done by first combining the authenticator data with the hash computed at step 7.
+
+\paragraph{Step15}\hfill \\ 
+Step 15 validates the trust anchor, in other words, whether we should trust this authenticator or not. This should be done by getting data from a fido metadata service. In the implementation it is done by comparing the aaguid from the authenticator to the one recieved from a Yubikey 5. This should be the same for each key.
+
+\paragraph{Step16}\hfill \\ 
+In step 16 the trustworthiness of the certificate used above should be checked. Again as we only trust yubico authenticators the ca cert from yubico is staticly used.
+
+\paragraph{Step17}\hfill \\ 
+Step 17 is testing for same credential on multiple users. The behavior of this is not specific. Additionally while testing the same authenticator always returned a different credential id and public key. Still, the check is done by checking against the other users.
+
+\paragraph{Step18}\hfill \\ 
+In step 18 the user is associated with the credential. It is added to that user and used later for a authentication. The state of the user is also set to registered. 
+
+\paragraph{Step19}\hfill \\ 
+Step 19 only states that if step 16 failed, the ceremony should be failed. As this was already done at step 16 this step can be ignored.
 
 \subsubsection{Summary}
+Overall there are a lot of steps needed for a successful ceremony. None of the steps should be skipped for convenience as all of them provide some sort of protection against various forms of attack. Some checks are rather complex and a real implementation should be wary of that. Maybe covering only one path is the simplest solution and fulfills all the requirements for a specific application. If that is the case only this way should be implemented. More complexity often only increases risk of exposure.
 
 \subsection{Login / Authentication}
+
+
 
 \subsubsection{Create registration}
 
 \subsubsection{Verify registration}
 
-\paragraph{Step1}
-\paragraph{Step2}
-\paragraph{Step3}
-\paragraph{Step4}
-\paragraph{Step5}
-\paragraph{Step6}
-\paragraph{Step7}
-\paragraph{Step8}
-\paragraph{Step9}
-\paragraph{Step10}
-\paragraph{Step11}
-\paragraph{Step12}
-\paragraph{Step13}
-\paragraph{Step14}
-\paragraph{Step15}
-\paragraph{Step16}
+\paragraph{Step1}\hfill \\ 
+asd
+\paragraph{Step2}\hfill \\ 
+asd
+\paragraph{Step3}\hfill \\ 
+asd
+\paragraph{Step4}\hfill \\ 
+asd
+\paragraph{Step5}\hfill \\ 
+asd
+\paragraph{Step6}\hfill \\ 
+asd
+\paragraph{Step7}\hfill \\ 
+asd
+\paragraph{Step8}\hfill \\ 
+asd
+\paragraph{Step9}\hfill \\ 
+asd
+\paragraph{Step10}\hfill \\ 
+asd
+\paragraph{Step11}\hfill \\ 
+asd
+\paragraph{Step12}\hfill \\ 
+asd
+\paragraph{Step13}\hfill \\ 
+asd
+\paragraph{Step14}\hfill \\ 
+asd
+\paragraph{Step15}\hfill \\ 
+asd
+\paragraph{Step16}\hfill \\ 
+asd
 \subsubsection{Summary}
+
+\subsection{Auth Data}
+\label{sec:authData}
 
 
 \section{Conclusion}
@@ -153,6 +250,11 @@ The registration which is reflected in the RegistrationController represents the
 
 
 \clearpage
+
+\printglossaries
+
+\clearpage
+
 %% Print the bibibliography and add the section to the table of content
 \printbibliography[heading=bibintoc]
 

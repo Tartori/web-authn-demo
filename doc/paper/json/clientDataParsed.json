@@ -1,0 +1,6 @@
+{
+  "challenge": "D7WQryRg4-jfXvSNcw3a8YANinbL0yG4bdonqgoRigA",
+  "new_keys_may_be_added_here": "do not compare clientDataJSON against a template. See https://goo.gl/yabPex",
+  "origin": "https://dev.webauthn.demo:8888",
+  "type": "webauthn.create"
+}

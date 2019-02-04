@@ -1,0 +1,10 @@
+{
+  "rawId": "qKk7sFYyBRex6K6twW5_5UHy-2DwdDXX7lA...",
+  "response": {
+    "attestationObject": "o2NmbXRmcGFja2VkZ2F0dFN0bXSjY2FsZy...",
+    "clientDataJSON": "eyJjaGFsbGVuZ2UiOiJCbHpxbHpSNVVD..."
+  },
+  "getClientExtensionResults": {},
+  "id": "qKk7sFYyBRex6K6twW5_5UHy-2DwdDXX7lA...",
+  "type": "public-key"
+}

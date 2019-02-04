@@ -1,0 +1,25 @@
+{
+  "public-key": {
+    "challenge": "UvwcjUM5UOASx2AK9MkVbXSmNoDc_AfhNMkDzhvFbXo",
+    "fidoResponse": "direct",
+    "rp": {
+      "name": "BFH",
+      "id": "dev.webauthn.demo"
+    },
+    "user": {
+      "id": "lPVdjYV97NDuLLMgJMyg4PYWU9R9VvOZL1hrTN8_MlU",
+      "name": "test",
+      "displayName": "test"
+    },
+    "pubKeyCredParams": [
+      {
+        "type": "public-key",
+        "alg": -7
+      }
+    ],
+    "attestation": "direct",
+    "timeout": 60000,
+    "errorMessage": "",
+    "status": "ok"
+  }
+}

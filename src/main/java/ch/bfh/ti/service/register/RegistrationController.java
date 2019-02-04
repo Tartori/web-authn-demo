@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -22,11 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.Signature;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Hashtable;
 import java.util.Optional;
 
 @RestController
@@ -38,6 +40,7 @@ public class RegistrationController {
     private static final boolean checkUserVerified=false;
     private static final boolean checkTokenBinding=false;
     public static final String DOMAIN="dev.webauthn.demo";
+    public static final String AAGUID_YUBIKEY_5="fa2b99dc9e3942578f924a30d23c4118";
     @Autowired
     private AuthenticatorDataParser authenticatorDataParser;
     @Autowired
@@ -134,10 +137,11 @@ public class RegistrationController {
         step12(authData); //various checks on extensions in authData
         step13(attestationData); //check check fmt format
         X509Certificate cert = getCertificate(attestationData);
+        validateCert(cert);
         JsonNode sig = attestationData.get("attStmt").get("sig");
         step14(attestationData.get("authData"), attestationData.get("attStmt"), clientHash, cert); // check attStmt signature
-        step15(); // obtain trust anchors
-        step16(); // assess the trustworthiness
+        step15(authData.getAaguid()); // obtain trust anchors
+        step16(cert); // assess the trustworthiness
         step17(authData); // check if credential not already in use
         step18(sensitiveUser, authData); // associate credential to user
         step19(); //check whether we want to fail based on invalid step 16 or not?
@@ -147,7 +151,9 @@ public class RegistrationController {
 
     private JsonNode step1(final JsonNode inputJson) throws RegistrationFailedException {
         System.out.println("User registration response: "+inputJson.toString());
-        if(!inputJson.has("response") || !inputJson.get("response").has("attestationObject")){
+        if(!inputJson.has("response")
+                || !inputJson.get("response").has("attestationObject")
+                || !inputJson.get("response").has("clientDataJSON")){
             throw new RegistrationFailedException(1);
         }
         return inputJson.get("response");
@@ -256,6 +262,32 @@ public class RegistrationController {
         return certificate;
     }
 
+    private void validateCert(X509Certificate cert) throws RegistrationFailedException{
+        if(cert.getVersion()!=3){
+            throw new RegistrationFailedException(14);
+        }
+        Hashtable<String, String> dn = splitDn(cert.getSubjectDN().getName());
+
+        if(!(dn.containsKey("C")&&dn.containsKey("O")&&dn.containsKey("OU")&&dn.containsKey("CN"))){
+            throw new RegistrationFailedException(14);
+        }
+        if(!(dn.get("C").equals("SE")&&dn.get("O").equals("Yubico AB")&&dn.get("OU").equals("Authenticator Attestation")&&dn.get("CN").contains("Yubico U2F EE Serial"))){
+            throw new RegistrationFailedException(14);
+        }
+        if(cert.getBasicConstraints()>=0){
+            throw new RegistrationFailedException(14);
+        }
+    }
+
+    private Hashtable<String, String> splitDn(String dn){
+        Hashtable<String, String> table = new Hashtable<>();
+        for (String part : dn.split(",")) {
+            String[] kv = part.split("=");
+            table.put(kv[0],kv[1]);
+        }
+        return table;
+    }
+
     private void step14(JsonNode authDataBin, JsonNode attStatement, byte[] clientDataHash, X509Certificate cert) throws RegistrationFailedException {
         JsonNode sig = attStatement.get("sig");
         final String signatureAlgorithmName = "SHA256withECDSA";
@@ -272,9 +304,46 @@ public class RegistrationController {
         }
     }
 
-    private void step15() throws RegistrationFailedException {}
+    private void step15(byte[] aaguid) throws RegistrationFailedException {
+        String aaguidHex =  Hex.encodeHexString(aaguid);
+        if(!aaguidHex.equals(AAGUID_YUBIKEY_5)){
+            throw new RegistrationFailedException(15);
+        }
+    }
 
-    private void step16() throws RegistrationFailedException {}
+    private void step16(X509Certificate cert) throws RegistrationFailedException {
+        try {
+            String fidoU2F=
+                    "MIIDHjCCAgagAwIBAgIEG0BT9zANBgkqhkiG9w0BAQsFADAuMSwwKgYDVQQDEyNZ" +
+                    "dWJpY28gVTJGIFJvb3QgQ0EgU2VyaWFsIDQ1NzIwMDYzMTAgFw0xNDA4MDEwMDAw" +
+                    "MDBaGA8yMDUwMDkwNDAwMDAwMFowLjEsMCoGA1UEAxMjWXViaWNvIFUyRiBSb290" +
+                    "IENBIFNlcmlhbCA0NTcyMDA2MzEwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK" +
+                    "AoIBAQC/jwYuhBVlqaiYWEMsrWFisgJ+PtM91eSrpI4TK7U53mwCIawSDHy8vUmk" +
+                    "5N2KAj9abvT9NP5SMS1hQi3usxoYGonXQgfO6ZXyUA9a+KAkqdFnBnlyugSeCOep" +
+                    "8EdZFfsaRFtMjkwz5Gcz2Py4vIYvCdMHPtwaz0bVuzneueIEz6TnQjE63Rdt2zbw" +
+                    "nebwTG5ZybeWSwbzy+BJ34ZHcUhPAY89yJQXuE0IzMZFcEBbPNRbWECRKgjq//qT" +
+                    "9nmDOFVlSRCt2wiqPSzluwn+v+suQEBsUjTGMEd25tKXXTkNW21wIWbxeSyUoTXw" +
+                    "LvGS6xlwQSgNpk2qXYwf8iXg7VWZAgMBAAGjQjBAMB0GA1UdDgQWBBQgIvz0bNGJ" +
+                    "hjgpToksyKpP9xv9oDAPBgNVHRMECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBBjAN" +
+                    "BgkqhkiG9w0BAQsFAAOCAQEAjvjuOMDSa+JXFCLyBKsycXtBVZsJ4Ue3LbaEsPY4" +
+                    "MYN/hIQ5ZM5p7EjfcnMG4CtYkNsfNHc0AhBLdq45rnT87q/6O3vUEtNMafbhU6kt" +
+                    "hX7Y+9XFN9NpmYxr+ekVY5xOxi8h9JDIgoMP4VB1uS0aunL1IGqrNooL9mmFnL2k" +
+                    "LVVee6/VR6C5+KSTCMCWppMuJIZII2v9o4dkoZ8Y7QRjQlLfYzd3qGtKbw7xaF1U" +
+                    "sG/5xUb/Btwb2X2g4InpiB/yt/3CpQXpiWX/K4mBvUKiGn05ZsqeY1gx4g0xLBqc" +
+                    "U9psmyPzK+Vsgw2jeRQ5JlKDyqE0hebfC1tvFu0CCrJFcw==";
+            byte[] decoded = Base64.getDecoder().decode(fidoU2F);
+            X509Certificate root = certificateParser.parseDer(decoded);
+            cert.verify(root.getPublicKey());
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
+            throw new RegistrationFailedException(16);
+        }
+
+    }
+
+    private X509Certificate decodeStringCert(String cert) throws CertificateException {
+        byte[] decoded = Base64.getDecoder().decode(cert);
+        return  certificateParser.parseDer(decoded);
+    }
 
     private void step17(AuthData authData) throws RegistrationFailedException {
         if(userRepository.getUserByCredential(base64UrlEncoder.encodeToString(authData.getCredId())).isPresent() && failIfCredentialIsAlreadyInUse){
