@@ -1,0 +1,436 @@
+\documentclass{beamer}
+
+% Code Segments
+\usepackage{listings}
+\input{json-highlighting.tex}
+
+% Images
+\usepackage{graphicx}
+
+% Sequence Diagram
+\usepackage{geometry}
+\usepackage{pgf-umlsd}
+\usetikzlibrary{calc}
+
+\usecolortheme{beaver}
+
+\AtBeginSection
+{
+  \begin{frame}
+    \frametitle{Table of Contents}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\setbeamertemplate{itemize items}{\textbullet}
+\setbeamertemplate{footline}[text line]{%
+  \parbox{\linewidth}{\vspace*{-8pt}
+    \insertshorttitle\hfill\insertshortauthor\hfill\insertframenumber
+  }
+}
+\setbeamertemplate{navigation symbols}{}
+
+\begin{document}
+
+\title{WebAuthn Reference Implementation}
+\subtitle{FIDO2: What, Why, How}
+\author{Julian Stampfli}
+
+\frame{\titlepage}
+
+\begin{frame}
+  \frametitle{Table of Contents}
+  \tableofcontents
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Passwords}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      Drawbacks
+      \begin{itemize}
+        \item Hard to remember good passwords
+        \item Weak passwords are chosen
+        \item Passwords are reused
+      \end{itemize}
+    \end{column}
+    \pause
+    \begin{column}{0.5\textwidth}
+      Benefits
+      \begin{itemize}
+        \item EASY!!
+        \item ...
+        \pause
+        \item People are used to them
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{FIDO2}
+  \begin{itemize}
+    \item Standard for Passwordless Authentication
+    \item Easy to use(?)
+    \pause
+    \item Authenticator (Token) instead of password
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{FIDO2 vs Passwords}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      Passwords
+      \begin{itemize}
+        \item Have it remembered
+        \item Enter it
+        \item Hope they are protected
+      \end{itemize}
+    \end{column}
+    \pause
+    \begin{column}{0.5\textwidth}
+      FIDO2
+      \begin{itemize}
+        \item Bring your Authenticator
+        \item Plug it in
+        \item Press a button
+        \item Like an OTP
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{FIDO2 vs OTP}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      OTP
+      \begin{itemize}
+        \item Generated with shared secret
+        \item Kindof like a password
+        \item Secure against Replay attacks
+        \item Weak against MitM
+        \item Weak against verifier compromise
+      \end{itemize}
+    \end{column}
+    \pause
+    \begin{column}{0.5\textwidth}
+      FIDO2
+      \begin{itemize}
+        \item Generated with public key crypto
+        \item Save(ish) against MitM
+        \item Save against verifier compromise
+        \item Save against remote attacks
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{FIDO2 vs FIDO U2F}
+  \begin{itemize}
+    \item FIDO U2F predecessor of FIDO2
+    \item FIDO2 used for passwordless and second factor
+    \item FIDO2 keeps the keys on Authenticator
+    \item Interoperable
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{How does FIDO2 work}
+  \begin{figure}[h]
+    \centering
+    \begin{sequencediagram}
+      \newinst{U}{User}{}
+      \newinst{T}{Token}{}
+      \newinst{B}{Browser}{}
+      \newthread{R}{Replying Party}{}
+      \begin{call}{R}{WebAuthn}{B}{WebAuth}
+        \begin{call} {B}{CTAP}{T}{CTAP}
+          \begin{call}{T}{activate}{U}{press}
+          \end{call}
+        \end{call} 
+      \end{call}
+    \end{sequencediagram}
+  \end{figure}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{WebAuthn - Registration}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Registration}
+  \begin{figure}[h]
+    \centering
+    \begin{sequencediagram}
+      \newthread{U}{User}{}
+      \newinst[0.5]{T}{Token}{}
+      \newinst[1.5]{B}{Browser}{}
+      \newinst[1]{R}{Replying Party}{}
+      \begin{call}{U}{Register}{B}{}
+        \begin{call} {B}{/register(user)}{R}{makeCredJson}
+        \end{call} 
+        \begin{call} {B}{webAuthn.create}{T}{createResponse}
+          \begin{call}{T}{activate}{U}{press}
+          \end{call}
+        \end{call} 
+        \begin{call} {B}{/register/response}{R}{username}
+        \end{call} 
+      \end{call}
+    \end{sequencediagram}
+  \end{figure}
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Create Registration JSON}
+  \begin{lstlisting}[language=json]
+    {
+      "public-key": {
+        "challenge": "UvwcjUM5UOASx2AK9...",
+        "fidoResponse": "direct",
+        "rp": {
+          "name": "BFH",
+          "id": "dev.webauthn.demo"
+        },
+        "user": {
+          "id": "lPVdjYV97NDuLLMg...",
+          "name": "test",
+          "displayName": "test"
+        },
+  \end{lstlisting}
+  \framebreak
+
+  \begin{lstlisting}[language=json]
+        "pubKeyCredParams": [
+          {
+            "type": "public-key",
+            "alg": -7
+          }
+        ],
+        "attestation": "direct",
+        "timeout": 60000,
+      }
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Registration Response}
+  \begin{lstlisting}[language=json]
+    {
+      "rawId": "qKk7sFYyBRex6K6twW5...",
+      "response": {
+        "attestationObject": "o2NmbXRm...",
+        "clientDataJSON": "eyJjaGF..."
+      },
+      "getClientExtensionResults": {},
+      "id": "qKk7sFYyBRex6K6twW5...",
+      "type": "public-key"
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Registration Response}
+  \begin{itemize}
+    \item 19 Steps have to be completed
+    \item 1-7 parse and validate ClientDataJSON
+    \item 8-13 parse and validate attestationObject
+    \item 14 verify signature
+    \item 15,16 verify trustworthiness 
+    \item 17,18 verify user data
+    \item 19 - fail if any step failed
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Client Data Parsed}
+  \begin{lstlisting}[language=json]
+    {
+      "challenge": "UvwcjUM5UOASx2AK9...",
+      "new_keys_may_be_added_here": "do not compare clientDataJSON ",
+      "origin": "https://dev.webauthn.demo:8888",
+      "type": "webauthn.create"
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Attestation Data Parsed}
+  \begin{lstlisting}[language=json]
+    {
+      "fmt": "packed",
+      "attStmt": {
+        "alg": -7,
+        "sig": "MEQCIBRsm+gm5tY75S/uEk...",
+        "x5c": [
+          "MIICvDCCAaSgAwIBAgIEA63wEjA..."
+        ]
+      },
+      "authData": "kn8Lq9EV0MBhHa/k+ZE..."
+    }
+  \end{lstlisting}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{WebAuthn - Authentication}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Authentication}
+  \begin{figure}[h]
+    \centering
+    \begin{sequencediagram}
+      \newthread{U}{User}{}
+      \newinst[0.5]{T}{Token}{}
+      \newinst[1.5]{B}{Browser}{}
+      \newinst[1]{R}{Replying Party}{}
+      \begin{call}{U}{Register}{B}{}
+        \begin{call} {B}{/login(user)}{R}{createAuthnJson}
+        \end{call} 
+        \begin{call} {B}{webAuthn.get}{T}{authnResponse}
+          \begin{call}{T}{activate}{U}{press}
+          \end{call}
+        \end{call} 
+        \begin{call} {B}{/login/response}{R}{username}
+        \end{call} 
+      \end{call}
+    \end{sequencediagram}
+  \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Create Authentication JSON}
+  \begin{lstlisting}[language=json]
+    {
+      "public-key": {
+        "challenge": "rfmx563tPscMU...",
+        "rpId": "dev.webauthn.demo",
+        "allowCredentials": [
+          {
+            "type": "public-key",
+            "id": "NWIv8Cd3lXkE8r4_..."
+          }
+        ],
+        "timeout": 60000,
+      }
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Authentication Response}
+  \begin{lstlisting}[language=json]
+    {
+      "rawId": "NWIv8Cd3lXkE8r4_Ondf6f...",
+      "response": {
+        "authenticatorData": "kn8Lq9EV",
+        "signature": "MEUCIAhdPPqzV69p...",
+        "userHandle": "",
+        "clientDataJSON": "eyJjaGFsbGV..."
+      },
+      "getClientExtensionResults": {},
+      "id": "NWIv8Cd3lXkE8r4_Ondf6fPDe...",
+      "type": "public-key"
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Authentication Response Steps}
+  \begin{itemize}
+    \item 18 Steps have to be completed
+    \item 1-4 validate user and authenticator
+    \item 5-10,15 parse and validate ClientDataJSON
+    \item 11-14 parse and validate authenticatorData
+    \item 16,17 verify signature and sign count
+    \item 18 - fail if any step failed
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Client Data Parsed}
+  \begin{lstlisting}[language=json]
+    {
+      "challenge": "pT5Z7r07quoiDUbLxB...",
+      "origin": "https://dev.webauthn.demo:8888",
+      "type": "webauthn.get"
+    }
+  \end{lstlisting}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Auth Data}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Comparison}
+  \begin{itemize}
+    \item RP ID hash
+    \item Flags
+    \item Sign Count
+    \item Attested Credential Data (Registration)
+    \item Extensions (Optional)
+  \end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Summary/Conclusion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Conclusion}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      Summary
+      \begin{itemize}
+          \item Passwordless
+          \item Registration and authentication very similar
+          \item Rather complex
+          \item Need for libraries
+      \end{itemize}
+    \end{column}
+    \pause
+    \begin{column}{0.5\textwidth}
+      Conclusion
+      \begin{itemize}
+        \item Wide adoption?
+        \item Used in eID?
+        \item Used internally?
+        \item Complexity?
+        \item User verification?
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Further Research}
+    \begin{itemize}
+      \item FIDO2 over NFC
+      \item Other authenticators
+      \item Managing authenticators
+    \end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Demo}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+  \frametitle{Demo}
+  \url{https://dev.webauthn.demo:8888}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Questions}
+  \pause
+  \url{https://github.com/Tartori/web-authn-demo}
+\end{frame}
+
+\end{document}
