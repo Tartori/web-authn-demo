@@ -39,6 +39,11 @@
 \frame{\titlepage}
 
 \begin{frame}
+  \frametitle{Project source}
+  \url{https://github.com/Tartori/web-authn-demo}
+\end{frame}
+
+\begin{frame}
   \frametitle{Table of Contents}
   \tableofcontents
 \end{frame}
@@ -89,7 +94,7 @@
       \begin{itemize}
         \item Have it remembered
         \item Enter it
-        \item Hope they are protected
+        \item Hope it is protected
       \end{itemize}
     \end{column}
     \pause
@@ -112,7 +117,7 @@
       OTP
       \begin{itemize}
         \item Generated with shared secret
-        \item Kindof like a password
+        \item Kind of like a password
         \item Secure against Replay attacks
         \item Weak against MitM
         \item Weak against verifier compromise
@@ -240,11 +245,11 @@
   \frametitle{Registration Response}
   \begin{itemize}
     \item 19 Steps have to be completed
-    \item 1-7 parse and validate ClientDataJSON
+    \item 1-7 parse and validate clientDataJSON
     \item 8-13 parse and validate attestationObject
     \item 14 verify signature
     \item 15,16 verify trustworthiness 
-    \item 17,18 verify user data
+    \item 17,18 verify and update user data
     \item 19 - fail if any step failed
   \end{itemize}
 \end{frame}
@@ -291,7 +296,7 @@
       \newinst[0.5]{T}{Token}{}
       \newinst[1.5]{B}{Browser}{}
       \newinst[1]{R}{Replying Party}{}
-      \begin{call}{U}{Register}{B}{}
+      \begin{call}{U}{Authenticate}{B}{}
         \begin{call} {B}{/login(user)}{R}{createAuthnJson}
         \end{call} 
         \begin{call} {B}{webAuthn.get}{T}{authnResponse}
@@ -346,8 +351,9 @@
   \frametitle{Authentication Response Steps}
   \begin{itemize}
     \item 18 Steps have to be completed
-    \item 1-4 validate user and authenticator
-    \item 5-10,15 parse and validate ClientDataJSON
+    \item 1-3 validate user and authenticator
+    \item 4 parse several fields
+    \item 5-10,15 parse and validate clientDataJSON
     \item 11-14 parse and validate authenticatorData
     \item 16,17 verify signature and sign count
     \item 18 - fail if any step failed
@@ -366,11 +372,11 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Auth Data}
+\section{WebAuthn - Authenticator Data}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-  \frametitle{Comparison}
+  \frametitle{Authenticator Data}
   \begin{itemize}
     \item RP ID hash
     \item Flags
