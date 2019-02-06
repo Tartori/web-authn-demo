@@ -110,7 +110,7 @@ It is possible to use a \gls{fido} \gls{u2f} token to authenticate with a \gls{f
 \end{figure}
 
 
-\section{Replying Party Reference Implementation}
+\section{Relying Party Reference Implementation}
 \label{sec:replying_party}
 
 The \gls{rp} is one of the main components of the \gls{webAuthn} standard and the main component of this paper. It includes a sample implementation of the \gls{rp} meant as a reference. This part deals with the two phases attestation and authentication. First, there is a short section dealing with the setup of the reference code.
@@ -137,9 +137,9 @@ The registration which is reflected in the RegistrationController represents the
   \centering
   \begin{sequencediagram}
     \newthread{U}{User}{}
-    \newinst[1]{T}{Token}{}
+    \newinst[1]{T}{Authenticator}{}
     \newinst[2.5]{B}{Browser}{}
-    \newinst[3]{R}{Replying Party}{}
+    \newinst[3]{R}{\gls{rp}}{}
     \begin{call}{U}{Register}{B}{}
       \begin{call} {B}{/create(user)}{R}{makeCredentialJson}
       \end{call} 
@@ -257,9 +257,9 @@ The authentication is implemented in the LoginController. It deals with the proc
   \centering
   \begin{sequencediagram}
     \newthread{U}{User}{}
-    \newinst[1]{T}{Token}{}
+    \newinst[1]{T}{Authenticator}{}
     \newinst[2.5]{B}{Browser}{}
-    \newinst[3]{R}{Replying Party}{}
+    \newinst[3]{R}{\gls{rp}}{}
     \begin{call}{U}{Login}{B}{}
       \begin{call} {B}{/create(user)}{R}{createAuthenticationJson}
       \end{call} 
@@ -294,7 +294,7 @@ Simmilar to the create registration section discussed above the create authentic
 
 The standard supplies a set of 18 steps to verify an authentication assertion. Should a step fail, a LoginFailedException is thrown which results in an error code in return. Before the first step, some serialization has to be done. The initial response is visible in Listing \ref{lst:attestationResponse}.
 
-\lstinputlisting[language=json, caption=Attestation Response \gls{json}, label=lst:attestationResponse]{json/attestationResponse.json}
+\lstinputlisting[language=json, caption=Authentication Response \gls{json}, label=lst:attestationResponse]{json/attestationResponse.json}
 
 \paragraph{Step1}\hfill \\ 
 In the first step, the credential should be matched to the credentials requested. This match is done by first getting the user with the credential. Then the stored assertion request for this user is compared against the credential id given with the assertion.
@@ -314,7 +314,7 @@ Step 5 requires an \gls{utf-8} decoding of the `cData'.
 \paragraph{Step6}\hfill \\ 
 Step 6 requires a \gls{json} parsing of the decoded `cData'. Step 5 and 6 are to close together that the reference implementation combined them into one step which deals with both at the same time. The final `clientDataJSON' is displayed in Listing \ref{lst:attestationClientData}.
 
-\lstinputlisting[language=json, caption=Attestation Client Data \gls{json}, label=lst:attestationClientData]{json/attestationClientData.json}
+\lstinputlisting[language=json, caption=Authentication Client Data \gls{json}, label=lst:attestationClientData]{json/attestationClientData.json}
 
 \paragraph{Step7}\hfill \\ 
 In step 7 the type of the client data must be set to `webauthn.get'.

@@ -268,10 +268,16 @@ public class RegistrationController {
         }
         Hashtable<String, String> dn = splitDn(cert.getSubjectDN().getName());
 
-        if(!(dn.containsKey("C")&&dn.containsKey("O")&&dn.containsKey("OU")&&dn.containsKey("CN"))){
+        if(!(dn.containsKey("C")&&
+                dn.containsKey("O")&&
+                dn.containsKey("OU")&&
+                dn.containsKey("CN"))){
             throw new RegistrationFailedException(14);
         }
-        if(!(dn.get("C").equals("SE")&&dn.get("O").equals("Yubico AB")&&dn.get("OU").equals("Authenticator Attestation")&&dn.get("CN").contains("Yubico U2F EE Serial"))){
+        if(!(dn.get("C").equals("SE")&&
+                dn.get("O").equals("Yubico AB")&&
+                dn.get("OU").equals("Authenticator Attestation")&&
+                dn.get("CN").contains("Yubico U2F EE Serial"))){
             throw new RegistrationFailedException(14);
         }
         if(cert.getBasicConstraints()>=0){

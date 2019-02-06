@@ -154,7 +154,7 @@
       \newinst{U}{User}{}
       \newinst{T}{Token}{}
       \newinst{B}{Browser}{}
-      \newthread{R}{Replying Party}{}
+      \newthread{R}{Relying Party}{}
       \begin{call}{R}{WebAuthn}{B}{WebAuth}
         \begin{call} {B}{CTAP}{T}{CTAP}
           \begin{call}{T}{activate}{U}{press}
@@ -177,7 +177,7 @@
       \newthread{U}{User}{}
       \newinst[0.5]{T}{Token}{}
       \newinst[1.5]{B}{Browser}{}
-      \newinst[1]{R}{Replying Party}{}
+      \newinst[1]{R}{Relying Party}{}
       \begin{call}{U}{Register}{B}{}
         \begin{call} {B}{/register(user)}{R}{makeCredJson}
         \end{call} 
@@ -295,7 +295,7 @@
       \newthread{U}{User}{}
       \newinst[0.5]{T}{Token}{}
       \newinst[1.5]{B}{Browser}{}
-      \newinst[1]{R}{Replying Party}{}
+      \newinst[1]{R}{Relying Party}{}
       \begin{call}{U}{Authenticate}{B}{}
         \begin{call} {B}{/login(user)}{R}{createAuthnJson}
         \end{call} 
