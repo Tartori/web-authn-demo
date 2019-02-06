@@ -118,25 +118,25 @@ public class LoginControler {
             throw new LoginFailedException(0);
         }
         JsonNode response = inputJson.get("response");
-        SensitiveUser user = step1(inputJson);
-        step2(response, user);
-        String publicKey=step3(user);
-        String cData = step4(response, "clientDataJSON");
-        String authData = step4(response, "authenticatorData");
-        String sig = step4(response, "signature");
-        JsonNode decodedClientData = step5and6(cData);
-        step7(decodedClientData);
-        step8(decodedClientData,user);
-        step9(decodedClientData);
-        step10(decodedClientData);
-        AuthData authDataParsed = getAuthData(authData);
-        step11(authDataParsed);
-        step12(authDataParsed);
-        step13(authDataParsed);
-        step14(authDataParsed);
-        byte[] clientHash = step15(cData);
-        step16(publicKey, authData, clientHash, sig);
-        step17(authDataParsed, user);
+        SensitiveUser user = step1(inputJson); //retrieve user and check credential id
+        step2(response, user); //check userhandle
+        String publicKey=step3(user); // retrieve pk
+        String cData = step4(response, "clientDataJSON"); //parse clientdatajson
+        String authData = step4(response, "authenticatorData"); //parse authenticator data
+        String sig = step4(response, "signature"); //parse signature
+        JsonNode decodedClientData = step5and6(cData); //decode client data
+        step7(decodedClientData); // check type = webauthn.get
+        step8(decodedClientData,user); // check challenge
+        step9(decodedClientData); // check origin
+        step10(decodedClientData); // check token binding
+        AuthData authDataParsed = getAuthData(authData); //parse authenticator data
+        step11(authDataParsed); // check rpid hash
+        step12(authDataParsed); //check user present
+        step13(authDataParsed); //check user verified
+        step14(authDataParsed); //check extensions
+        byte[] clientHash = step15(cData); //hash client data
+        step16(publicKey, authData, clientHash, sig); //check signature
+        step17(authDataParsed, user); //check sign count and update.
         return user;
     }
 
